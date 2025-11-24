@@ -1,0 +1,18 @@
+.dateWidget {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 1rem 1.5rem;
+}
+
+.date {
+  font-size: 1.25rem;
+  color: var(--foreground);
+  text-transform: capitalize;
+  text-align: center;
+  font-weight: 500;
+  white-space: nowrap;
+  width: 100%;
+}
+

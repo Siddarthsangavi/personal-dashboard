@@ -1,0 +1,66 @@
+.scratchpadWidget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.scratchpadTextarea,
+.scratchpadTextarea textarea {
+  flex: 1;
+  width: 100%;
+  resize: none;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  padding: 1rem;
+  outline: none;
+  overflow-y: auto;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.scratchpadTextarea::-webkit-scrollbar,
+.scratchpadTextarea textarea::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.scratchpadTextarea::-webkit-scrollbar-track,
+.scratchpadTextarea textarea::-webkit-scrollbar-track {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.scratchpadTextarea::-webkit-scrollbar-thumb,
+.scratchpadTextarea textarea::-webkit-scrollbar-thumb {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.scratchpadTextarea::placeholder {
+  color: var(--muted-foreground);
+  opacity: 0.6;
+}
+
+.scratchpadTextarea:focus {
+  outline: none;
+}
+
+.savingIndicator {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+  opacity: 0.7;
+  pointer-events: none;
+}
+

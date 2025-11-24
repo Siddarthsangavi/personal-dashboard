@@ -1,0 +1,120 @@
+.todoWidget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.composer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.todoInput {
+  flex: 1;
+}
+
+.todoList {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.25rem;
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 100%;
+  position: relative;
+  flex-shrink: 1;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.todoList::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.todoCard {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-lg);
+  background-color: color-mix(
+    in oklab,
+    var(--card) 84%,
+    transparent
+  );
+  border: 1px solid color-mix(in oklab, var(--foreground) 6%, transparent);
+  transition: border-color 0.2s ease, transform 0.2s ease, opacity 0.3s ease, max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+  overflow: hidden;
+}
+
+.todoCard.removing {
+  animation: disappear 0.3s ease-out forwards;
+}
+
+.todoCard:hover {
+  border-color: color-mix(in oklab, var(--foreground) 18%, transparent);
+  transform: translateY(-1px);
+}
+
+.todoBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.todoMeta {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.todoText {
+  font-weight: 500;
+  font-size: 0.875rem;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  user-select: none;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+@keyframes disappear {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    max-height: 100px;
+    margin-bottom: 0.5rem;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+    max-height: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+.editInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.emptyState {
+  margin-top: 2rem;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+}
+

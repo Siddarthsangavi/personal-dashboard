@@ -1,0 +1,178 @@
+.linksWidget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+}
+
+.emptyAddButton {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  border: 2px dashed color-mix(in oklab, var(--foreground) 18%, transparent);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  pointer-events: auto !important;
+  touch-action: auto !important;
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: center;
+  align-self: center;
+}
+
+.emptyAddButton:hover {
+  border-color: var(--foreground);
+  color: var(--foreground);
+  transform: scale(1.02);
+}
+
+.linksGrid {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-items: center;
+  padding: 0;
+  box-sizing: border-box;
+  grid-auto-flow: row;
+  overflow: hidden;
+  grid-auto-columns: 40px;
+  grid-auto-rows: 40px;
+}
+
+.linkTile {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  border-radius: var(--radius-lg);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: transform 0.2s ease;
+  padding: 0;
+  pointer-events: auto !important;
+  touch-action: auto !important;
+  flex-shrink: 0;
+}
+
+.linkTile:hover {
+  transform: translateY(-2px);
+}
+
+.linkButton {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto !important;
+  touch-action: auto !important;
+  z-index: 1;
+}
+
+.deleteButton {
+  position: absolute;
+  top: 0.125rem;
+  right: 0.125rem;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--destructive);
+  border: none;
+  color: var(--destructive-foreground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  pointer-events: auto !important;
+  touch-action: auto !important;
+  z-index: 2;
+  padding: 0;
+}
+
+.linkTile:hover .deleteButton {
+  opacity: 1;
+}
+
+.deleteButton:hover {
+  transform: scale(1.15);
+  background: color-mix(in oklab, var(--destructive) 90%, black);
+}
+
+.addTile {
+  border-style: dashed;
+  border-width: 1.5px;
+  cursor: pointer;
+  color: var(--muted-foreground);
+  pointer-events: auto !important;
+  touch-action: auto !important;
+}
+
+.addTile:hover {
+  color: var(--foreground);
+  border-color: var(--foreground);
+}
+
+.iconPicker {
+  max-height: 220px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 0.5rem;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.iconPicker::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.iconChoice {
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+  padding: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  background: transparent;
+}
+
+.iconChoice:hover {
+  border-color: color-mix(in oklab, var(--foreground) 22%, transparent);
+  transform: translateY(-1px);
+}
+
+.iconChoice.isActive {
+  border-color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 14%, transparent);
+}
+

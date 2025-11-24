@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Personalised Dashboard
 
-## Getting Started
+Offline-first workspace where users can mix todos, notes, and icon-only quick links, then resize/drag each widget without third-party grid libraries.
 
-First, run the development server:
+### Tech highlights
+
+- **Next.js 16 + TypeScript** with App Router, SCSS modules, and shadcn/ui for primitives.
+- **IndexedDB (via `idb`)** persists widgets, layout metadata, and per-widget data models (todos, notes, quick links).
+- **Custom drag + resize engine** written in-house (no `react-grid-layout`), snapping to a 12-column grid with persistence.
+- **Surface modes** (default, glassmorphism, neumorphism) + theme toggle (light/dark) with per-widget chrome.
+- **PWA ready** using `@ducanh2912/next-pwa` plus `app/manifest.ts` for offline use/install prompts.
+- **Icon search API proxy** (`/api/icons`) that streams Iconify results for the quick-links picker.
+
+### Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# app runs on http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Project structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+src/
+  app/                # App Router routes, global styles, manifest
+  components/         # Shared shadcn/ui wrappers + core icon button
+  modules/
+    dashboard/        # Shell, board, picker, store, surface toggles
+    widgets/          # Todo, notes, quick-links feature modules
+  lib/                # IndexedDB repositories + utilities
+  styles/             # SCSS tokens for board + surfaces
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### IndexedDB schema
 
-## Learn More
+- `widgets`: layout metadata (`position`, `size`, `surface`, timestamps)
+- `todos`, `notes`, `quicklinks`: per-widget data tables with `widgetId` FK + indexes
+- `settings`: lightweight key/value store (currently surface style)
 
-To learn more about Next.js, take a look at the following resources:
+### Available scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command        | Description                       |
+| -------------- | --------------------------------- |
+| `npm run dev`  | Start local dev server             |
+| `npm run build`| Build production bundle            |
+| `npm run start`| Serve production build             |
+| `npm run lint` | Run ESLint (Next.js config)        |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Future work
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Sync IndexedDB state with a remote data store.
+- Add additional widgets (calendar, metrics, etc.).
+- Hook up automated/visual regression tests once UI stabilises.

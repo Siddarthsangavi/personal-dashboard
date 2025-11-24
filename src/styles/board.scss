@@ -1,0 +1,622 @@
+.dashboard-board {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dashboard-board__canvas {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+  animation: pageFadeIn 0.3s ease-out;
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.widget-card {
+  position: relative; // react-grid-layout handles absolute positioning
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: 
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s ease,
+    border-radius 0.3s ease;
+  // CRITICAL: Border must be consistent across all surface modes to prevent visual shifts
+  // The border reduces the available space by 2px (1px on each side)
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-width: 1px !important; // Ensure consistent border width
+  background: var(--card);
+  // CRITICAL: Don't set box-shadow: none here - let surface classes apply their shadows
+  // box-shadow: none; // Removed - surface classes need to apply shadows
+  box-sizing: border-box !important; // CRITICAL: Prevents shadow bleed from affecting layout calculations
+  pointer-events: auto; // Ensure resize handles are clickable
+  width: 100%; // Fill react-grid-item container
+  height: 100%; // Fill react-grid-item container
+  max-height: 100%; // Prevent growing beyond container
+  min-height: 0; // Allow flex children to shrink
+  top: 0 !important; // Lock position
+  left: 0 !important; // Lock position
+  transform: none !important; // Prevent transforms
+  margin: 0 !important; // Prevent margins
+}
+
+// CRITICAL: Prevent transitions from affecting position when switching modes
+.surface--default.widget-card,
+.surface--glass.widget-card,
+.surface--neumorphic.widget-card {
+  transition: 
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s ease,
+    border-radius 0.3s ease,
+    background 0.3s ease,
+    border-color 0.3s ease !important;
+  transition-property: box-shadow, opacity, border-radius, background, border-color !important;
+  // Ensure NO layout changes
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+// Make entire quick-links widget draggable, but exclude interactive elements
+.widget-card--quick-links {
+  cursor: grab;
+  touch-action: none;
+}
+
+.widget-card--quick-links:active {
+  cursor: grabbing;
+}
+
+// Exclude buttons and interactive elements from drag for quick-links
+.widget-card--quick-links button,
+.widget-card--quick-links a,
+.widget-card--quick-links input,
+.widget-card--quick-links [role="button"] {
+  pointer-events: auto !important;
+  touch-action: auto !important;
+  cursor: pointer;
+}
+
+// Remove shadows for default surface
+.surface--default.widget-card {
+  box-shadow: none !important;
+}
+
+// Glass and neumorphic styles are now handled in surfaces.scss
+// This section removed to prevent conflicts
+
+// Ensure default widgets have no shadow and consistent sizing
+.surface--default.widget-card {
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent) !important; // Ensure consistent border
+  pointer-events: auto !important; // Ensure resize handles are clickable
+  width: 100% !important; // Match glassmorphic sizing
+  height: 100% !important; // Match glassmorphic sizing
+}
+
+// Removed all neumorphic-specific fixes - starting fresh
+
+// CRITICAL: Ensure widgets inside content maintain their flex behavior
+.surface--glass .widget-card__content > *,
+.surface--default .widget-card__content > *,
+.surface--neumorphic .widget-card__content > * {
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+  margin: 0 !important;
+}
+
+// Removed neumorphic chrome rules - starting fresh
+
+// Remove hover shadow for default surface
+.surface--default.widget-card:hover {
+  box-shadow: none !important;
+}
+
+.widget-card:focus-within {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.widget-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.widget-card button,
+.widget-card [role="button"],
+.widget-card [data-widget-actions] button {
+  touch-action: auto !important;
+}
+
+@keyframes widgetFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.widget-card {
+  cursor: grab;
+}
+
+.widget-card:active,
+.widget-card[data-dragging="true"] {
+  cursor: grabbing;
+  transform: scale(0.98);
+  z-index: 1000;
+  filter: brightness(0.95);
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+
+// Ensure no shadow on active/dragging for default
+.surface--default.widget-card:active,
+.surface--default.widget-card[data-dragging="true"] {
+  box-shadow: none !important;
+}
+
+.widget-card[data-resizing="true"] {
+  cursor: se-resize;
+  z-index: 1000;
+}
+
+.widget-card__surface {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(0px);
+  z-index: 1;
+  border-radius: inherit;
+  overflow: hidden; // Clip all children to border-radius
+  box-shadow: none; // Ensure no shadow on surface
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; // Ensure children stretch to full width
+  justify-content: flex-start; // Align children to start (top)
+  min-height: 0;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+  isolation: isolate; // Create new stacking context to prevent z-index issues
+  top: 0 !important; // Ensure no vertical offset
+  left: 0 !important; // Ensure no horizontal offset
+  transform: none !important; // Prevent any transforms
+  margin: 0 !important; // Prevent any margins
+  padding: 0 !important; // Prevent any padding
+}
+
+// CRITICAL: Ensure surface doesn't shift when surface classes are applied
+// Same rules for ALL surface modes to ensure consistency
+.surface--default .widget-card__surface,
+.surface--glass .widget-card__surface,
+.surface--neumorphic .widget-card__surface {
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+.widget-card__surface::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.widget-card__chrome {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  overflow: hidden; // Clip content to border-radius
+  flex-shrink: 0; // Prevent chrome from shrinking
+}
+
+.surface--glass .widget-card__chrome {
+  background: rgba(255, 255, 255, 0.2) !important; // Match the glass effect
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4) !important;
+  backdrop-filter: blur(120px) saturate(400%) brightness(1.4) !important; // Same strong blur as the card
+  -webkit-backdrop-filter: blur(120px) saturate(400%) brightness(1.4) !important;
+  flex-shrink: 0 !important; // Prevent chrome from shrinking
+  position: sticky !important; // Ensure sticky positioning
+  top: 0 !important;
+  z-index: 10 !important;
+}
+
+.dark .surface--glass .widget-card__chrome {
+  background: rgba(255, 255, 255, 0.03) !important; // Very transparent to match glass effect
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(120px) saturate(400%) brightness(0.85) !important; // Same strong blur as the card
+  -webkit-backdrop-filter: blur(120px) saturate(400%) brightness(0.85) !important;
+  flex-shrink: 0 !important; // Prevent chrome from shrinking
+  position: sticky !important; // Ensure sticky positioning
+  top: 0 !important;
+  z-index: 10 !important;
+}
+
+// Removed neumorphic chrome rules - starting fresh
+
+.widget-card__chrome button,
+.widget-card__chrome [role="button"] {
+  position: relative;
+  z-index: 10;
+  pointer-events: auto !important;
+  touch-action: auto !important;
+}
+
+.widget-card__content {
+  position: relative !important;
+  flex: 1 1 0 !important;
+  padding: 1rem !important; // CRITICAL: Force consistent padding across all modes
+  overflow: hidden;
+  z-index: 1;
+  min-height: 0;
+  max-height: 100%;
+  display: flex !important;
+  flex-direction: column !important;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+  align-self: stretch !important; // Ensure content stretches to fill available space
+  justify-self: stretch !important; // Ensure content stretches horizontally
+  top: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  translate: none !important;
+  margin: 0 !important;
+  margin-top: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-bottom: 0 !important;
+  align-items: stretch !important; // Container stretches children
+  justify-content: flex-start !important; // Container aligns to start
+  box-sizing: border-box !important; // CRITICAL: Include padding in size calculation
+  // NOTE: Children (like linksWidget) can override align-items/justify-content for their own centering
+}
+
+// CRITICAL: Normalize padding for all surface modes to prevent shifts
+// BUT: Preserve padding: 0 for widgets that need it (quick-links, digital-clock, etc.)
+.surface--default .widget-card__content,
+.surface--glass .widget-card__content,
+.surface--neumorphic .widget-card__content {
+  box-sizing: border-box !important; // CRITICAL: Prevents shadow bleed from affecting layout
+}
+
+
+.widget-card__content::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Hide scrollbars for all scrollable elements inside widget content */
+.widget-card__content *,
+.widget-card__content textarea,
+.widget-card__content div,
+.widget-card__content ul,
+.widget-card__content ol {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.widget-card__content *::-webkit-scrollbar,
+.widget-card__content textarea::-webkit-scrollbar,
+.widget-card__content div::-webkit-scrollbar,
+.widget-card__content ul::-webkit-scrollbar,
+.widget-card__content ol::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+// Remove padding for quick-links widget to maximize icon size
+// CRITICAL: Ensure consistent padding (0) across all surface modes
+// CRITICAL FIX: For widgets without title bars, ensure box-sizing prevents shadow bleed
+.widget-card.widget-card--quick-links .widget-card__content,
+.widget-card--quick-links .widget-card__content,
+.widget-card[class*="quick-links"] .widget-card__content,
+.widget-card[data-widget-type="quick-links"] .widget-card__content,
+.widget-card[data-widget-type="digital-clock"] .widget-card__content,
+.widget-card[data-widget-type="analog-clock"] .widget-card__content,
+.widget-card[data-widget-type="weather"] .widget-card__content,
+.widget-card[data-widget-type="scratchpad"] .widget-card__content,
+.surface--default .widget-card--quick-links .widget-card__content,
+.surface--default [data-widget-type="quick-links"] .widget-card__content,
+.surface--default [data-widget-type="digital-clock"] .widget-card__content,
+.surface--default [data-widget-type="analog-clock"] .widget-card__content,
+.surface--default [data-widget-type="weather"] .widget-card__content,
+.surface--default [data-widget-type="scratchpad"] .widget-card__content,
+.surface--glass .widget-card--quick-links .widget-card__content,
+.surface--glass [data-widget-type="quick-links"] .widget-card__content,
+.surface--glass [data-widget-type="digital-clock"] .widget-card__content,
+.surface--glass [data-widget-type="analog-clock"] .widget-card__content,
+.surface--glass [data-widget-type="weather"] .widget-card__content,
+.surface--glass [data-widget-type="scratchpad"] .widget-card__content,
+.surface--neumorphic .widget-card--quick-links .widget-card__content,
+.surface--neumorphic [data-widget-type="quick-links"] .widget-card__content,
+.surface--neumorphic [data-widget-type="digital-clock"] .widget-card__content,
+.surface--neumorphic [data-widget-type="analog-clock"] .widget-card__content,
+.surface--neumorphic [data-widget-type="weather"] .widget-card__content,
+.surface--neumorphic [data-widget-type="scratchpad"] .widget-card__content {
+  padding: 0 !important; // Consistent 0 padding across all modes
+  padding-top: 0 !important;
+  padding-right: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 0 !important;
+  position: relative !important; // Ensure proper positioning
+  top: 0 !important; // Prevent vertical shift
+  left: 0 !important; // Prevent horizontal shift
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important; // Prevent transforms
+  align-self: stretch !important; // Ensure full width
+  justify-self: stretch !important; // Ensure full height
+  margin: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important; // Container stretches, but children can center themselves
+  justify-content: flex-start !important; // Container aligns to start
+  box-sizing: border-box !important; // CRITICAL: Prevents shadow/blur bleed from affecting layout
+  // CRITICAL: Ensure content maintains centering (widgets use align-items: center internally)
+  min-height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  // CRITICAL: Lock dimensions to prevent visual effects from affecting layout
+  max-width: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important; // Prevent content from spilling out
+}
+
+// CRITICAL: Ensure content areas maintain position across ALL surface modes
+.surface--default .widget-card__content,
+.surface--default .widget-card__drag-area,
+.surface--glass .widget-card__content,
+.surface--glass .widget-card__drag-area,
+.surface--neumorphic .widget-card__content,
+.surface--neumorphic .widget-card__drag-area {
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: inherit; // Use default padding (handled by widget-specific rules)
+  box-sizing: border-box !important;
+  // Remove any visual effects from content area
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+.widget-card__resizer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 24px;
+  height: 24px;
+  cursor: se-resize;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  opacity: 0 !important;
+  pointer-events: auto !important;
+  touch-action: auto !important;
+  z-index: 100;
+}
+
+.widget-card__title {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.widget-card__title:active {
+  cursor: grabbing;
+}
+
+.widget-card__drag-area {
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  position: relative !important; // Ensure proper positioning
+  top: 0 !important; // Prevent vertical shift
+  left: 0 !important; // Prevent horizontal shift
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important; // Prevent transforms
+  translate: none !important;
+  align-self: stretch !important; // Ensure full width
+  justify-self: stretch !important; // Ensure full height
+  margin: 0 !important; // Prevent any margins
+  margin-top: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-bottom: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+// Ensure drag-area content doesn't shift in glass/neumorphic modes
+.surface--glass .widget-card__drag-area,
+.surface--glass.widget-card .widget-card__drag-area,
+.surface--glass.widget-card--quick-links .widget-card__drag-area,
+.surface--glass.widget-card[data-widget-type="quick-links"] .widget-card__drag-area,
+.surface--glass.widget-card[data-widget-type="digital-clock"] .widget-card__drag-area,
+.surface--glass.widget-card[data-widget-type="analog-clock"] .widget-card__drag-area,
+.surface--glass.widget-card[data-widget-type="weather"] .widget-card__drag-area,
+.surface--glass.widget-card[data-widget-type="scratchpad"] .widget-card__drag-area,
+.surface--neumorphic .widget-card__drag-area,
+.surface--neumorphic.widget-card .widget-card__drag-area,
+.surface--neumorphic.widget-card--quick-links .widget-card__drag-area,
+.surface--neumorphic.widget-card[data-widget-type="quick-links"] .widget-card__drag-area,
+.surface--neumorphic.widget-card[data-widget-type="digital-clock"] .widget-card__drag-area,
+.surface--neumorphic.widget-card[data-widget-type="analog-clock"] .widget-card__drag-area,
+.surface--neumorphic.widget-card[data-widget-type="weather"] .widget-card__drag-area,
+.surface--neumorphic.widget-card[data-widget-type="scratchpad"] .widget-card__drag-area {
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  align-self: stretch !important;
+  justify-self: stretch !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+}
+
+.widget-card__drag-area:active {
+  cursor: grabbing;
+}
+
+// Buttons and interactive elements inside drag area should not trigger drag
+.widget-card__drag-area button,
+.widget-card__drag-area a,
+.widget-card__drag-area input,
+.widget-card__drag-area [role="button"] {
+  pointer-events: auto !important;
+  touch-action: auto !important;
+  cursor: pointer;
+}
+
+.widget-card__drag-handle {
+  cursor: grab;
+  padding: 0.3rem 0.35rem;
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
+  display: inline-flex;
+}
+
+.widget-card__drag-handle:hover {
+  background-color: color-mix(in oklab, var(--foreground) 10%, transparent);
+}
+
+// React Grid Layout customizations
+.react-grid-layout {
+  position: relative;
+  height: 100%;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, width, height;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform, width, height;
+}
+
+.react-grid-item.resizing {
+  transition: none;
+  z-index: 1;
+  will-change: width, height;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  will-change: transform;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: color-mix(in srgb, var(--border) 15%, transparent) !important;
+  border: 2px dashed color-mix(in srgb, var(--muted-foreground) 40%, transparent) !important;
+  opacity: 1 !important;
+  transition-duration: 100ms;
+  z-index: 2;
+  border-radius: var(--radius-lg);
+  user-select: none;
+  box-shadow: none !important;
+}
+
+.dark .react-grid-item.react-grid-placeholder {
+  background: color-mix(in srgb, var(--border) 20%, transparent) !important;
+  border: 2px dashed color-mix(in srgb, var(--muted-foreground) 50%, transparent) !important;
+}
+
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  background: none;
+  cursor: se-resize;
+  z-index: 100 !important; // Ensure resize handles are above everything
+  pointer-events: auto !important; // Ensure resize handles are clickable
+}
+
+// Hide resize handle for date widgets
+.react-grid-item:has(.widget-card--date) > .react-resizable-handle,
+.react-grid-item:has([data-widget-type="date"]) > .react-resizable-handle {
+  display: none !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 5px;
+  height: 5px;
+  border-right: 2px solid rgba(0, 0, 0, 0.4);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+}
+

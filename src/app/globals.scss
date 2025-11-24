@@ -1,0 +1,227 @@
+@use "../styles/board";
+@use "../styles/surfaces";
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #f5f5f4;
+  --foreground: #1f1f1f;
+  --card: #ffffff;
+  --card-foreground: #1f1f1f;
+  --popover: #ffffff;
+  --popover-foreground: #1f1f1f;
+  --primary: #1f1f1f;
+  --primary-foreground: #f8f8f8;
+  --secondary: #ececec;
+  --secondary-foreground: #1f1f1f;
+  --muted: #ececec;
+  --muted-foreground: #6b6b6b;
+  --accent: #e5e5e5;
+  --accent-foreground: #1f1f1f;
+  --destructive: #a8a8a8;
+  --border: #d9d9d9;
+  --input: #d9d9d9;
+  --ring: rgba(0, 0, 0, 0.15);
+  --chart-1: #1f1f1f;
+  --chart-2: #3d3d3d;
+  --chart-3: #5c5c5c;
+  --chart-4: #7a7a7a;
+  --chart-5: #999999;
+  --sidebar: #fbfbfb;
+  --sidebar-foreground: #1f1f1f;
+  --sidebar-primary: #1f1f1f;
+  --sidebar-primary-foreground: #fdfdfd;
+  --sidebar-accent: #ebebeb;
+  --sidebar-accent-foreground: #1f1f1f;
+  --sidebar-border: #dcdcdc;
+  --sidebar-ring: rgba(0, 0, 0, 0.08);
+  --surface-neumorphic-bg: #f2f2f2;
+}
+
+.dark {
+  --background: #090909;
+  --foreground: #f6f6f6;
+  --card: #141414;
+  --card-foreground: #f6f6f6;
+  --popover: #141414;
+  --popover-foreground: #f6f6f6;
+  --primary: #f6f6f6;
+  --primary-foreground: #111111;
+  --secondary: #1f1f1f;
+  --secondary-foreground: #f6f6f6;
+  --muted: #1f1f1f;
+  --muted-foreground: #9b9b9b;
+  --accent: #1f1f1f;
+  --accent-foreground: #f6f6f6;
+  --destructive: #555555;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: rgba(255, 255, 255, 0.15);
+  --chart-1: #f6f6f6;
+  --chart-2: #cfcfcf;
+  --chart-3: #a8a8a8;
+  --chart-4: #818181;
+  --chart-5: #5a5a5a;
+  --sidebar: #0f0f0f;
+  --sidebar-foreground: #f6f6f6;
+  --sidebar-primary: #f6f6f6;
+  --sidebar-primary-foreground: #0f0f0f;
+  --sidebar-accent: #1b1b1b;
+  --sidebar-accent-foreground: #f6f6f6;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-ring: rgba(255, 255, 255, 0.12);
+  --surface-neumorphic-bg: #141414;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image: none !important;
+    position: relative;
+  }
+  
+  // Monochromatic background pattern for glassmorphism effect
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 50%, rgba(0, 0, 0, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(0, 0, 0, 0.02) 0%, transparent 50%),
+      radial-gradient(circle at 40% 20%, rgba(0, 0, 0, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.5s ease;
+  }
+  
+  .dark body::before {
+    background: 
+      radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.015) 0%, transparent 50%),
+      radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+  }
+}
+
+.neumorphism {
+  --neumorphism-background: #e0e0e0;
+  --neumorphism-shadow-light: #ffffff;
+  --neumorphism-shadow-dark: #bebebe;
+  --neumorphism-text: #5e5e5e;
+}
+
+.dark .neumorphism {
+  --neumorphism-background: #2c2c2c;
+  --neumorphism-shadow-light: #3a3a3a;
+  --neumorphism-shadow-dark: #1e1e1e;
+  --neumorphism-text: #b0b0b0;
+}
+
+.neumorphic-card {
+  background: var(--neumorphism-background);
+  box-shadow: 10px 10px 20px var(--neumorphism-shadow-dark),
+    -10px -10px 20px var(--neumorphism-shadow-light);
+  color: var(--neumorphism-text);
+  border-radius: var(--radius-lg);
+}
+
+/* Hide all scrollbars inside widget content areas - Universal selector for maximum coverage */
+.widget-card textarea,
+.widget-card div[style*="overflow"],
+.widget-card div[style*="overflow-y"],
+.widget-card ul,
+.widget-card ol,
+.widget-card__content,
+.widget-card__content *,
+.widget-card__content textarea,
+.widget-card__content div,
+.widget-card__content ul,
+.widget-card__content ol,
+.widget-card__surface,
+.widget-card__surface *,
+.widget-card__surface textarea {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+/* Webkit scrollbar hiding - must target all possible combinations */
+.widget-card textarea::-webkit-scrollbar,
+.widget-card div::-webkit-scrollbar,
+.widget-card ul::-webkit-scrollbar,
+.widget-card ol::-webkit-scrollbar,
+.widget-card__content::-webkit-scrollbar,
+.widget-card__content *::-webkit-scrollbar,
+.widget-card__content textarea::-webkit-scrollbar,
+.widget-card__content div::-webkit-scrollbar,
+.widget-card__content ul::-webkit-scrollbar,
+.widget-card__content ol::-webkit-scrollbar,
+.widget-card__surface::-webkit-scrollbar,
+.widget-card__surface *::-webkit-scrollbar,
+.widget-card__surface textarea::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+/* Also hide scrollbar track and thumb */
+.widget-card textarea::-webkit-scrollbar-track,
+.widget-card textarea::-webkit-scrollbar-thumb,
+.widget-card__content *::-webkit-scrollbar-track,
+.widget-card__content *::-webkit-scrollbar-thumb,
+.widget-card__surface *::-webkit-scrollbar-track,
+.widget-card__surface *::-webkit-scrollbar-thumb {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
