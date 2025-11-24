@@ -13,11 +13,43 @@ Offline-first workspace where users can mix todos, notes, and icon-only quick li
 
 ### Getting started
 
+#### Prerequisites
+
+- **Node.js** (version 18 or higher recommended)
+- **npm** (comes with Node.js) or **yarn**
+
+#### Installation Steps
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Siddarthsangavi/personal-dashboard.git
+   cd personal-dashboard
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser**
+   - Navigate to [http://localhost:3000](http://localhost:3000)
+   - The app will automatically reload when you make changes
+
+#### Production Build
+
+To create a production build:
+
 ```bash
-npm install
-npm run dev
-# app runs on http://localhost:3000
+npm run build
+npm run start
 ```
+
+The production server will run on `http://localhost:3000`
 
 ### Project structure
 
