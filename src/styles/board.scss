@@ -356,24 +356,28 @@
 .widget-card[class*="quick-links"] .widget-card__content,
 .widget-card[data-widget-type="quick-links"] .widget-card__content,
 .widget-card[data-widget-type="digital-clock"] .widget-card__content,
+.widget-card[data-widget-type="date"] .widget-card__content,
 .widget-card[data-widget-type="analog-clock"] .widget-card__content,
 .widget-card[data-widget-type="weather"] .widget-card__content,
 .widget-card[data-widget-type="scratchpad"] .widget-card__content,
 .surface--default .widget-card--quick-links .widget-card__content,
 .surface--default [data-widget-type="quick-links"] .widget-card__content,
 .surface--default [data-widget-type="digital-clock"] .widget-card__content,
+.surface--default [data-widget-type="date"] .widget-card__content,
 .surface--default [data-widget-type="analog-clock"] .widget-card__content,
 .surface--default [data-widget-type="weather"] .widget-card__content,
 .surface--default [data-widget-type="scratchpad"] .widget-card__content,
 .surface--glass .widget-card--quick-links .widget-card__content,
 .surface--glass [data-widget-type="quick-links"] .widget-card__content,
 .surface--glass [data-widget-type="digital-clock"] .widget-card__content,
+.surface--glass [data-widget-type="date"] .widget-card__content,
 .surface--glass [data-widget-type="analog-clock"] .widget-card__content,
 .surface--glass [data-widget-type="weather"] .widget-card__content,
 .surface--glass [data-widget-type="scratchpad"] .widget-card__content,
 .surface--neumorphic .widget-card--quick-links .widget-card__content,
 .surface--neumorphic [data-widget-type="quick-links"] .widget-card__content,
 .surface--neumorphic [data-widget-type="digital-clock"] .widget-card__content,
+.surface--neumorphic [data-widget-type="date"] .widget-card__content,
 .surface--neumorphic [data-widget-type="analog-clock"] .widget-card__content,
 .surface--neumorphic [data-widget-type="weather"] .widget-card__content,
 .surface--neumorphic [data-widget-type="scratchpad"] .widget-card__content {
@@ -392,6 +396,8 @@
   justify-self: stretch !important; // Ensure full height
   margin: 0 !important;
   margin-top: 0 !important;
+  margin-left: 0 !important; // CRITICAL: Ensure no left margin causing gap
+  margin-right: 0 !important; // CRITICAL: Ensure no right margin
   margin-bottom: 0 !important;
   display: flex !important;
   flex-direction: column !important;
@@ -406,6 +412,27 @@
   max-width: 100% !important;
   max-height: 100% !important;
   overflow: hidden !important; // Prevent content from spilling out
+}
+
+// CRITICAL: Fix left gap for date and digital-clock widgets at default size
+.widget-card[data-widget-type="date"] .widget-card__content,
+.widget-card[data-widget-type="digital-clock"] .widget-card__content {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+}
+
+.surface--default [data-widget-type="date"] .widget-card__content,
+.surface--default [data-widget-type="digital-clock"] .widget-card__content,
+.surface--glass [data-widget-type="date"] .widget-card__content,
+.surface--glass [data-widget-type="digital-clock"] .widget-card__content,
+.surface--neumorphic [data-widget-type="date"] .widget-card__content,
+.surface--neumorphic [data-widget-type="digital-clock"] .widget-card__content {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  left: 0 !important;
+  transform: none !important;
 }
 
 // CRITICAL: Ensure content areas maintain position across ALL surface modes
@@ -491,6 +518,7 @@
 .surface--glass.widget-card--quick-links .widget-card__drag-area,
 .surface--glass.widget-card[data-widget-type="quick-links"] .widget-card__drag-area,
 .surface--glass.widget-card[data-widget-type="digital-clock"] .widget-card__drag-area,
+.surface--glass.widget-card[data-widget-type="date"] .widget-card__drag-area,
 .surface--glass.widget-card[data-widget-type="analog-clock"] .widget-card__drag-area,
 .surface--glass.widget-card[data-widget-type="weather"] .widget-card__drag-area,
 .surface--glass.widget-card[data-widget-type="scratchpad"] .widget-card__drag-area,
@@ -499,6 +527,7 @@
 .surface--neumorphic.widget-card--quick-links .widget-card__drag-area,
 .surface--neumorphic.widget-card[data-widget-type="quick-links"] .widget-card__drag-area,
 .surface--neumorphic.widget-card[data-widget-type="digital-clock"] .widget-card__drag-area,
+.surface--neumorphic.widget-card[data-widget-type="date"] .widget-card__drag-area,
 .surface--neumorphic.widget-card[data-widget-type="analog-clock"] .widget-card__drag-area,
 .surface--neumorphic.widget-card[data-widget-type="weather"] .widget-card__drag-area,
 .surface--neumorphic.widget-card[data-widget-type="scratchpad"] .widget-card__drag-area {

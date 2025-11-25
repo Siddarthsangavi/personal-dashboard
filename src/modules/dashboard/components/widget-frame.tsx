@@ -142,7 +142,7 @@ export function WidgetFrame({
             // For widgets without title bars, only set padding: 0 in default mode
             // In glass/neumorphic modes, CSS will add padding to compensate for visual effects
             hideTitleBar && surface === "default"
-              ? (widget.type === "quick-links" || widget.type === "digital-clock" 
+              ? (widget.type === "quick-links" || widget.type === "digital-clock" || widget.type === "date"
                   ? { padding: 0 } 
                   : undefined)
               : widget.type === "pomodoro"
