@@ -58,7 +58,7 @@ const WidgetHost = memo(function WidgetHost({
 });
 
 export function WidgetBoard() {
-  const currentPage = useDashboardStore((state) => state.currentPage);
+  const currentTabId = useDashboardStore((state) => state.currentTabId);
   const allWidgets = useDashboardStore((state) => state.widgets);
   const surface = useDashboardStore((state) => state.surfaceStyle);
   const updateLayout = useDashboardStore((state) => state.updateWidgetLayout);
@@ -66,13 +66,11 @@ export function WidgetBoard() {
   const { showToast } = useToast();
 
   const widgets = useMemo(
-    () => allWidgets.filter((w) => w.pageId === currentPage),
-    [allWidgets, currentPage]
+    () => allWidgets.filter((w) => w.pageId === currentTabId),
+    [allWidgets, currentTabId]
   );
 
   const [boardRef, { width, height }] = useElementSize<HTMLDivElement>();
-  const fixingWidgetsRef = useRef(false);
-  const lastMaxRowsRef = useRef<number | null>(null);
 
   const removeWidget = useCallback(
     async (id: number) => {
@@ -82,35 +80,15 @@ export function WidgetBoard() {
     [removeWidgetStore, showToast]
   );
 
-  const setMaxRows = useDashboardStore((state) => state.setMaxRows);
-
-  // Calculate max rows based on actual board height
-  const maxRows = useMemo(() => {
-    if (!height || height <= 0) return 20; // fallback
-    const rowUnit = GRID_SETTINGS.rowHeight + GRID_SETTINGS.gap;
-    // Calculate max rows that fit in available height, be very conservative
-    // Subtract extra margin to ensure no overflow
-    const calculated = Math.floor((height - GRID_SETTINGS.gap * 2) / rowUnit);
-    return Math.max(1, calculated);
-  }, [height]);
-
-  // Update store with current maxRows so addWidgets can use it
-  useEffect(() => {
-    if (maxRows > 0) {
-      setMaxRows(maxRows);
-    }
-  }, [maxRows, setMaxRows]);
-
   // Convert widgets to react-grid-layout format
   const layout = useMemo((): Layout[] => {
     return widgets.map((widget) => {
       // For analog-clock, enforce square constraints
       if (widget.type === "analog-clock") {
         const minSize = Math.max(widget.minSize.w, widget.minSize.h);
-        // Allow growing to any square size up to grid boundaries
+        // Allow growing to any square size up to grid boundaries (unlimited rows)
         const maxSizeX = GRID_SETTINGS.columns - widget.position.x;
-        const maxSizeY = maxRows - widget.position.y;
-        const maxSize = Math.min(GRID_SETTINGS.columns, maxRows, maxSizeX, maxSizeY);
+        const maxSize = Math.min(GRID_SETTINGS.columns, maxSizeX);
         return {
           i: widget.id.toString(),
           x: widget.position.x,
@@ -132,10 +110,10 @@ export function WidgetBoard() {
         minW: widget.minSize.w,
         minH: widget.minSize.h,
         maxW: widget.type === "date" ? 3 : GRID_SETTINGS.columns,
-        maxH: widget.type === "date" ? 1 : maxRows,
+        maxH: widget.type === "date" ? 1 : undefined, // Unlimited height
       };
     });
-  }, [widgets, maxRows]);
+  }, [widgets]);
 
 
   // Handle layout change from react-grid-layout
@@ -202,10 +180,9 @@ export function WidgetBoard() {
             }
           }
           
-          // Clamp to valid range
+          // Clamp to valid range (unlimited rows)
           const maxSizeX = GRID_SETTINGS.columns - item.x;
-          const maxSizeY = maxRows - item.y;
-          const maxSize = Math.min(maxSizeX, maxSizeY);
+          const maxSize = maxSizeX;
           
           const squareSize = Math.max(
             minSize,
@@ -214,9 +191,8 @@ export function WidgetBoard() {
           
           // Ensure position doesn't exceed boundaries with new square size
           const maxValidX = Math.max(0, GRID_SETTINGS.columns - squareSize);
-          const maxValidY = Math.max(0, maxRows - squareSize);
           const newX = Math.max(0, Math.min(item.x, maxValidX));
-          const newY = Math.max(0, Math.min(item.y, maxValidY));
+          const newY = Math.max(0, item.y); // No upper limit on Y
           
           // Always enforce square - update immediately if not square
           // This ensures the widget is always square during resize
@@ -243,10 +219,8 @@ export function WidgetBoard() {
         // Ensure widget doesn't exceed right boundary
         const newX = Math.max(0, Math.min(item.x, GRID_SETTINGS.columns - item.w));
         
-        // Ensure widget doesn't exceed bottom boundary (strict check)
-        // Widget's bottom row (y + h) must be <= maxRows
-        const maxValidY = Math.max(0, maxRows - item.h);
-        const newY = Math.max(0, Math.min(item.y, maxValidY));
+        // No upper limit on Y position (unlimited rows)
+        const newY = Math.max(0, item.y);
         
         // Ensure widget doesn't exceed right boundary
         const newW = Math.max(
@@ -254,66 +228,34 @@ export function WidgetBoard() {
           Math.min(item.w, GRID_SETTINGS.columns - newX)
         );
         
-        // Ensure widget doesn't exceed bottom boundary
-        const maxValidH = Math.max(widget.minSize.h, maxRows - newY);
-        const newH = Math.max(
-          widget.minSize.h,
-          Math.min(item.h, maxValidH)
-        );
+        // No upper limit on height (unlimited rows)
+        const newH = Math.max(widget.minSize.h, item.h);
         
-        // Final check: ensure widget bottom doesn't exceed maxRows
-        if (newY + newH > maxRows) {
-          // Clamp to valid position
-          const clampedY = Math.max(0, maxRows - newH);
-          const clampedH = Math.max(widget.minSize.h, maxRows - clampedY);
-          // Use clamped values
-          const finalY = clampedY;
-          const finalH = clampedH;
-
-          // Only update if position or size actually changed
-          if (
-            widget.position.x !== newX ||
-            widget.position.y !== finalY ||
-            widget.size.w !== newW ||
-            widget.size.h !== finalH
-          ) {
-            updateLayout(
-              widgetId,
-              {
-                position: { x: newX, y: finalY },
-                size: { w: newW, h: finalH },
-              },
-              { persist: false }
-            );
-          }
-        } else {
-          // Widget is within bounds, use original values
-          // Only update if position or size actually changed
-          if (
-            widget.position.x !== newX ||
-            widget.position.y !== newY ||
-            widget.size.w !== newW ||
-            widget.size.h !== newH
-          ) {
-            updateLayout(
-              widgetId,
-              {
-                position: { x: newX, y: newY },
-                size: { w: newW, h: newH },
-              },
-              { persist: false }
-            );
-          }
+        // Only update if position or size actually changed
+        if (
+          widget.position.x !== newX ||
+          widget.position.y !== newY ||
+          widget.size.w !== newW ||
+          widget.size.h !== newH
+        ) {
+          updateLayout(
+            widgetId,
+            {
+              position: { x: newX, y: newY },
+              size: { w: newW, h: newH },
+            },
+            { persist: false }
+          );
         }
       });
     },
-    [widgets, maxRows, updateLayout]
+    [widgets, updateLayout]
   );
 
   // Handle layout change end (persist to DB)
   const handleLayoutChangeEnd = useCallback(() => {
     const currentWidgets = useDashboardStore.getState().widgets.filter(
-      (w) => w.pageId === currentPage
+      (w) => w.pageId === currentTabId
     );
     // Persist all widgets on this page
     currentWidgets.forEach((widget) => {
@@ -326,7 +268,7 @@ export function WidgetBoard() {
         { persist: true }
       );
     });
-  }, [currentPage, updateLayout]);
+  }, [currentTabId, updateLayout]);
 
   // Calculate rowHeight to match column width for square widgets
   // Column width = (width - gaps) / columns
@@ -343,93 +285,18 @@ export function WidgetBoard() {
   }, [width]);
   const margin: [number, number] = [GRID_SETTINGS.gap, GRID_SETTINGS.gap];
 
-  // Fix widgets that are out of bounds when maxRows changes (only when maxRows actually changes)
-  useEffect(() => {
-    if (!maxRows || maxRows <= 0) return;
-    
-    // Only run if maxRows actually changed, not on every widget update
-    if (lastMaxRowsRef.current === maxRows) return;
-    lastMaxRowsRef.current = maxRows;
-    
-    // Prevent infinite loops
-    if (fixingWidgetsRef.current) return;
-    fixingWidgetsRef.current = true;
-    
-    // Use setTimeout to batch updates and prevent immediate re-triggering
-    const timeoutId = setTimeout(() => {
-      // Get current widgets from store to avoid dependency
-      const currentWidgets = useDashboardStore.getState().widgets.filter(
-        (w) => w.pageId === currentPage
-      );
-      
-      const widgetsToFix: Array<{ id: number; position: { x: number; y: number }; size: { w: number; h: number } }> = [];
-      
-      currentWidgets.forEach((widget) => {
-        const widgetBottom = widget.position.y + widget.size.h;
-        const maxX = GRID_SETTINGS.columns - widget.size.w;
-        const maxY = Math.max(0, maxRows - widget.size.h);
-        
-        let needsFix = false;
-        let newX = widget.position.x;
-        let newY = widget.position.y;
-        const newW = widget.size.w;
-        let newH = widget.size.h;
-        
-        // Check right boundary
-        if (widget.position.x > maxX) {
-          newX = Math.max(0, maxX);
-          needsFix = true;
-        }
-        
-        // Check bottom boundary
-        if (widgetBottom > maxRows) {
-          newY = Math.max(0, maxY);
-          // Also ensure height doesn't exceed available space
-          const maxValidH = Math.max(widget.minSize.h, maxRows - newY);
-          if (widget.size.h > maxValidH) {
-            newH = maxValidH;
-          }
-          needsFix = true;
-        }
-        
-        if (needsFix) {
-          widgetsToFix.push({
-            id: widget.id,
-            position: { x: newX, y: newY },
-            size: { w: newW, h: newH },
-          });
-        }
-      });
-      
-      // Batch update all widgets that need fixing (only if there are any)
-      if (widgetsToFix.length > 0) {
-        // Update all at once to prevent cascading updates
-        widgetsToFix.forEach(({ id, position, size }) => {
-          updateLayout(id, { position, size }, { persist: true });
-        });
-      }
-      
-      fixingWidgetsRef.current = false;
-    }, 200); // Increased timeout to prevent rapid re-triggering
-    
-    return () => {
-      clearTimeout(timeoutId);
-      fixingWidgetsRef.current = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maxRows, currentPage]); // Only depend on maxRows and currentPage
 
   // Calculate the minimum height needed to display all widgets
   const minGridHeight = useMemo(() => {
-    if (widgets.length === 0) return height || 0;
+    if (widgets.length === 0) return 0; // No min height when empty
     const rowUnit = GRID_SETTINGS.rowHeight + GRID_SETTINGS.gap;
     const maxWidgetBottom = Math.max(
       ...widgets.map((w) => w.position.y + w.size.h),
       0
     );
     // Add some padding at the bottom
-    return Math.max((maxWidgetBottom + 2) * rowUnit, height || 0);
-  }, [widgets, height]);
+    return (maxWidgetBottom + 2) * rowUnit;
+  }, [widgets]);
 
   // Add custom CSS for react-grid-layout
   const gridLayoutStyle = useMemo(() => ({
@@ -461,8 +328,7 @@ export function WidgetBoard() {
             onLayoutChange={handleLayoutChange}
             onDragStop={handleLayoutChangeEnd}
             onResizeStop={handleLayoutChangeEnd}
-            maxRows={maxRows}
-            isBounded={true} // Keep widgets within bounds
+            isBounded={false} // Allow unlimited rows
             draggableHandle=".widget-card__title, .widget-card__drag-area, .widget-card--quick-links"
             resizeHandles={["se"]} // Only bottom-right resize handle
             useCSSTransforms={true}

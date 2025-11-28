@@ -48,6 +48,14 @@ export interface SettingRecord {
   updatedAt: string;
 }
 
+export interface TabRecord {
+  id: number;
+  name: string;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DataLibraryCategoryRecord {
   id: number;
   name: string;
@@ -137,17 +145,22 @@ interface DashboardDB extends DBSchema {
   notionPages: {
     key: number;
     value: PageRecord;
-    indexes: { parentId: number | null };
+    indexes: { parentId: number };
   };
   notionBlocks: {
     key: number;
     value: NotionBlockRecord;
-    indexes: { pageId: number; parentId: number | null };
+    indexes: { pageId: number; parentId: number };
+  };
+  tabs: {
+    key: number;
+    value: TabRecord;
+    indexes: { order: number };
   };
 }
 
 const DB_NAME = "personalised-dashboard";
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 
 let dbPromise: Promise<IDBPDatabase<DashboardDB>> | null = null;
 
@@ -296,6 +309,16 @@ const ensureDb = async () => {
         if (oldVersion < 6) {
           // Migration: Order field will be added lazily when pages are first accessed
           // This is handled in the list() function
+        }
+
+        if (oldVersion < 7) {
+          if (!db.objectStoreNames.contains("tabs")) {
+            const tabsStore = db.createObjectStore("tabs", {
+              keyPath: "id",
+              autoIncrement: true,
+            });
+            tabsStore.createIndex("order", "order", { unique: false });
+          }
         }
       },
     });
@@ -474,7 +497,7 @@ export const pageRepository = {
   async list(parentId: number | null = null): Promise<PageRecord[]> {
     if (!isBrowser) return [];
     return withDb(async (db) => {
-      let pages: NotionPageRecord[];
+      let pages: PageRecord[];
       if (parentId === null) {
         // For null parentId, get all pages and filter
         const allPages = await db.getAll("notionPages");
@@ -700,5 +723,51 @@ export const dataLibraryItemRepository = {
   async remove(id: number) {
     if (!isBrowser) return;
     await withDb((db) => db.delete("dataLibraryItems", id));
+  },
+};
+
+export const tabRepository = {
+  async list(): Promise<TabRecord[]> {
+    if (!isBrowser) return [];
+    return withDb(async (db) => {
+      const allTabs = await db.getAll("tabs");
+      // Sort by order
+      return allTabs.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    });
+  },
+  async create(payload: Omit<TabRecord, "id" | "createdAt" | "updatedAt">): Promise<TabRecord | null> {
+    if (!isBrowser) return null;
+    const now = timestamp();
+    const allTabs = await this.list();
+    const maxOrder = allTabs.length > 0 ? Math.max(...allTabs.map(t => t.order ?? 0)) : 0;
+    const record: Omit<TabRecord, "id"> = {
+      ...payload,
+      order: payload.order ?? maxOrder + 1,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const id = await withDb((db) => db.add("tabs", record));
+    if (!id) return null;
+    return { ...(record as TabRecord), id: Number(id) };
+  },
+  async update(id: number, updates: Partial<TabRecord>): Promise<TabRecord | null> {
+    if (!isBrowser) return null;
+    const existing = await withDb((db) => db.get("tabs", id));
+    if (!existing) return null;
+    const updated = {
+      ...existing,
+      ...updates,
+      updatedAt: timestamp(),
+    };
+    await withDb((db) => db.put("tabs", updated));
+    return updated;
+  },
+  async remove(id: number): Promise<void> {
+    if (!isBrowser) return;
+    await withDb((db) => db.delete("tabs", id));
+  },
+  async get(id: number): Promise<TabRecord | null> {
+    if (!isBrowser) return null;
+    return withDb((db) => db.get("tabs", id));
   },
 };

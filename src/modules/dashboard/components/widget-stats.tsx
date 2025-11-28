@@ -8,12 +8,12 @@ import * as Icons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export function WidgetStats() {
-  const currentPage = useDashboardStore((state) => state.currentPage);
+  const currentTabId = useDashboardStore((state) => state.currentTabId);
   const getPageWidgets = useDashboardStore((state) => state.getPageWidgets);
 
   const pageWidgets = useMemo(
-    () => getPageWidgets(currentPage),
-    [getPageWidgets, currentPage]
+    () => currentTabId ? getPageWidgets(currentTabId) : [],
+    [getPageWidgets, currentTabId]
   );
 
   const stats = useMemo(() => {

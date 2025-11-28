@@ -6,7 +6,6 @@ import { DashboardToolbar } from "./dashboard-toolbar";
 import { WidgetBoard } from "./widget-board";
 import { EmptyState } from "./empty-state";
 import { WidgetPicker } from "./widget-picker";
-import { PageNavigation } from "./page-navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 export function DashboardShell() {
   const hydrate = useDashboardStore((state) => state.hydrate);
@@ -25,11 +24,10 @@ export function DashboardShell() {
       {/* Background container that extends to bottom of screen */}
       <div className="absolute inset-0 bg-background -z-10" />
       
-      <div className="flex-shrink-0 space-y-3 p-4 relative z-0">
+      <div className="flex-shrink-0 p-4 relative z-0">
         <DashboardToolbar
           onAdd={() => setPickerOpen(true)}
         />
-        {hasWidgets && <PageNavigation />}
       </div>
       <div className="flex-1 overflow-hidden px-4 pb-4 relative z-0">
         {loading ? (

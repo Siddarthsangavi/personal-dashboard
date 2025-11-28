@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { widgetRepository, settingsRepository } from "@/lib/db";
+import { widgetRepository, settingsRepository, tabRepository, type TabRecord } from "@/lib/db";
 import {
   WidgetRecord,
   WidgetType,
@@ -13,13 +13,13 @@ import { rectanglesOverlap, type Rect } from "../utils/collision-utils";
 
 interface DashboardState {
   widgets: WidgetRecord[];
+  tabs: TabRecord[];
   loading: boolean;
   initialized: boolean;
   surfaceStyle: SurfaceStyle;
-  currentPage: number;
-  maxRows: number; // Store maxRows for widget placement
+  currentTabId: number | null;
   hydrate: () => Promise<void>;
-  addWidgets: (types: WidgetType[], maxRows?: number) => Promise<void>;
+  addWidgets: (types: WidgetType[]) => Promise<void>;
   updateWidgetLayout: (
     id: number,
     updates: Pick<WidgetRecord, "position" | "size">,
@@ -27,10 +27,12 @@ interface DashboardState {
   ) => void;
   removeWidget: (id: number) => Promise<void>;
   setSurfaceStyle: (style: SurfaceStyle) => Promise<void>;
-  setCurrentPage: (page: number) => void;
-  setMaxRows: (maxRows: number) => void;
+  setCurrentTabId: (tabId: number) => Promise<void>;
+  createTab: (name?: string) => Promise<TabRecord | null>;
+  updateTab: (id: number, updates: Partial<TabRecord>) => Promise<void>;
+  removeTab: (id: number) => Promise<void>;
   getPageWidgets: (pageId: number) => WidgetRecord[];
-  getAvailablePages: () => number[];
+  getAvailableTabs: () => TabRecord[];
 }
 
 const defaultSurface: SurfaceStyle = "default";
@@ -39,22 +41,14 @@ const defaultSurface: SurfaceStyle = "default";
  * Finds the next available slot for a widget of the given size
  * @param existing - Array of existing widget rectangles
  * @param size - Size of the widget to place
- * @param maxRows - Optional maximum number of rows to search
- * @returns Position for the widget or null if no space available
+ * @returns Position for the widget (always finds a slot, unlimited space)
  */
-const findNextSlot = (existing: Rect[], size: GridSize, maxRows?: number): GridPosition | null => {
+const findNextSlot = (existing: Rect[], size: GridSize): GridPosition => {
   const maxColumns = GRID_SETTINGS.columns;
-  const maxY = maxRows !== undefined ? maxRows - size.h : undefined;
-  const searchDepth = maxY !== undefined
-    ? Math.min(maxY, existing.reduce((acc, widget) => Math.max(acc, widget.position.y + widget.size.h), 0) + 10)
-    : existing.reduce((acc, widget) => Math.max(acc, widget.position.y + widget.size.h), 0) + 50;
+  // Calculate search depth based on existing widgets, with some padding
+  const searchDepth = existing.reduce((acc, widget) => Math.max(acc, widget.position.y + widget.size.h), 0) + 50;
 
   for (let y = 0; y <= searchDepth; y++) {
-    // Check if this row would exceed maxRows
-    if (maxY !== undefined && y > maxY) {
-      return null; // No space on this page
-    }
-    
     for (let x = 0; x <= maxColumns - size.w; x++) {
       const candidate: Rect = { position: { x, y }, size };
       const hasCollision = existing.some((rect) =>
@@ -65,12 +59,8 @@ const findNextSlot = (existing: Rect[], size: GridSize, maxRows?: number): GridP
       }
     }
   }
-
-  // If maxRows is set and we couldn't find a slot, return null
-  if (maxRows !== undefined) {
-    return null;
-  }
   
+  // If no slot found in search depth, place at the bottom
   return { x: 0, y: searchDepth + 1 };
 };
 
@@ -148,49 +138,89 @@ const normalizeWidgets = (widgets: WidgetRecord[]): WidgetRecord[] => {
 
 export const useDashboardStore = create<DashboardState>((set, get) => ({
   widgets: [],
+  tabs: [],
   loading: true,
   initialized: false,
   surfaceStyle: defaultSurface,
-  currentPage: 1,
-  maxRows: 10, // Default maxRows
+  currentTabId: null,
   hydrate: async () => {
     if (get().initialized) return;
     set({ loading: true });
     try {
-      const [widgets, persistedSurface, persistedPage] = await Promise.all([
+      const [widgets, persistedSurface, persistedTabId] = await Promise.all([
         widgetRepository.list(),
         settingsRepository.get<SurfaceStyle>("surface-style"),
-        settingsRepository.get<number>("current-page"),
+        settingsRepository.get<number>("current-tab-id"),
       ]);
+      
+      // Load tabs
+      let tabs = await tabRepository.list();
+      
+      // If no tabs exist, create a default one
+      // All existing widgets will be migrated to use this tab
+      if (tabs.length === 0) {
+        const defaultTab = await tabRepository.create({
+          name: "Tab 1",
+          order: 1,
+        });
+        if (defaultTab) {
+          tabs = [defaultTab];
+          
+          // Migrate all widgets to use the default tab
+          // Update widgets that don't have a matching tab
+          const widgetPageIds = new Set(widgets.map(w => w.pageId ?? 1));
+          for (const widget of widgets) {
+            const widgetPageId = widget.pageId ?? 1;
+            // If widget's pageId doesn't match any tab, update it to default tab
+            if (widgetPageId !== defaultTab.id) {
+              await widgetRepository.update(widget.id, { pageId: defaultTab.id });
+            }
+          }
+        }
+      }
+      
+      // Set current tab - use persisted tab or first tab
+      const currentTabId = persistedTabId ?? tabs[0]?.id ?? null;
+      
       set({
         widgets: normalizeWidgets(widgets),
+        tabs,
         loading: false,
         initialized: true,
         surfaceStyle: persistedSurface ?? defaultSurface,
-        currentPage: persistedPage ?? 1,
+        currentTabId,
       });
     } catch (error) {
       console.error("Failed to hydrate dashboard:", error);
       set({
         widgets: [],
+        tabs: [],
         loading: false,
         initialized: true,
         surfaceStyle: defaultSurface,
-        currentPage: 1,
+        currentTabId: null,
       });
     }
   },
-  addWidgets: async (types: WidgetType[], maxRows?: number) => {
+  addWidgets: async (types: WidgetType[]) => {
     if (!types.length) return;
     let state = get();
-    let currentPage = state.currentPage;
-    let pageWidgets = state.widgets.filter((w) => w.pageId === currentPage);
+    let currentTabId = state.currentTabId;
+    if (!currentTabId) {
+      // If no current tab, use first tab or create one
+      if (state.tabs.length > 0) {
+        currentTabId = state.tabs[0].id;
+        await get().setCurrentTabId(currentTabId);
+      } else {
+        const newTab = await get().createTab();
+        if (!newTab) return;
+        currentTabId = newTab.id;
+      }
+    }
+    let pageWidgets = state.widgets.filter((w) => w.pageId === currentTabId);
     const payloads: Array<
       Omit<WidgetRecord, "id" | "createdAt" | "updatedAt">
     > = [];
-
-    // Use provided maxRows, or fall back to stored maxRows, or default to 10
-    const estimatedMaxRows = maxRows ?? state.maxRows ?? 10;
 
     // Track widgets being added in this batch to prevent overlaps
     const batchShadow: WidgetRecord[] = [];
@@ -202,80 +232,18 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         continue;
       }
       
-      // Refresh pageWidgets from current state in case page changed
+      // Refresh pageWidgets from current state in case tab changed
       state = get();
-      pageWidgets = state.widgets.filter((w) => w.pageId === currentPage);
+      currentTabId = state.currentTabId ?? currentTabId;
+      pageWidgets = state.widgets.filter((w) => w.pageId === currentTabId);
       
       // Combine existing page widgets with widgets being added in this batch
       const shadow: Rect[] = [
         ...pageWidgets.map((w) => ({ position: w.position, size: w.size })),
         ...batchShadow.map((w) => ({ position: w.position, size: w.size })),
       ];
-      let position = findNextSlot(shadow, definition.defaultSize, estimatedMaxRows);
-      
-      // If no space on current page, try existing pages first, then create new if needed
-      if (position === null) {
-        const availablePages = get().getAvailablePages();
-        const maxExistingPage = availablePages.length > 0 ? Math.max(...availablePages) : currentPage;
-        
-        // Try existing pages starting from currentPage + 1
-        let foundPage = false;
-        for (let tryPage = currentPage + 1; tryPage <= maxExistingPage; tryPage++) {
-          state = get();
-          const tryPageWidgets = state.widgets.filter((w) => w.pageId === tryPage);
-          const tryShadow: Rect[] = [
-            ...tryPageWidgets.map((w) => ({ position: w.position, size: w.size })),
-            ...batchShadow.map((w) => ({ position: w.position, size: w.size })),
-          ];
-          const tryPosition = findNextSlot(tryShadow, definition.defaultSize, estimatedMaxRows);
-          
-          if (tryPosition !== null && tryPosition.y + definition.defaultSize.h <= estimatedMaxRows) {
-            // Found space on this existing page
-            currentPage = tryPage;
-            position = tryPosition;
-            foundPage = true;
-            break;
-          }
-        }
-        
-        // If no space on any existing page, create a new page
-        if (!foundPage) {
-          const nextPage = maxExistingPage + 1;
-          currentPage = nextPage;
-          set({ currentPage });
-          await settingsRepository.put("current-page", currentPage);
-          
-          // Refresh state after page switch
-          state = get();
-          pageWidgets = state.widgets.filter((w) => w.pageId === currentPage);
-          // Reset batch shadow for new page
-          batchShadow.length = 0;
-          const emptyShadow: Rect[] = [];
-          position = findNextSlot(emptyShadow, definition.defaultSize, estimatedMaxRows) || { x: 0, y: 0 };
-        } else {
-          // Switch to the page we found
-          set({ currentPage });
-          await settingsRepository.put("current-page", currentPage);
-          state = get();
-          pageWidgets = state.widgets.filter((w) => w.pageId === currentPage);
-        }
-      }
-      
-      // Final check: ensure widget doesn't exceed maxRows before creating
-      if (position.y + definition.defaultSize.h > estimatedMaxRows) {
-        // This shouldn't happen if findNextSlot is working correctly, but handle it anyway
-        const availablePages = get().getAvailablePages();
-        const maxExistingPage = availablePages.length > 0 ? Math.max(...availablePages) : currentPage;
-        const nextPage = maxExistingPage + 1;
-        currentPage = nextPage;
-        set({ currentPage });
-        await settingsRepository.put("current-page", currentPage);
-        state = get();
-        pageWidgets = state.widgets.filter((w) => w.pageId === currentPage);
-        batchShadow.length = 0;
-        const emptyShadow: Rect[] = [];
-        position = findNextSlot(emptyShadow, definition.defaultSize, estimatedMaxRows) || { x: 0, y: 0 };
-      }
+      // Always add to current tab - unlimited space
+      const position = findNextSlot(shadow, definition.defaultSize);
       
       const payload = {
         type,
@@ -285,7 +253,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         minSize: definition.minSize,
         surface: state.surfaceStyle,
         isLocked: false,
-        pageId: currentPage,
+        pageId: currentTabId, // pageId is now tab.id
       };
       payloads.push(payload);
       
@@ -314,17 +282,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     set((state) => ({
       widgets: [...state.widgets, ...created],
     }));
-    
-    // Switch to the last page that has widgets if we created widgets on a new page
-    const finalState = get();
-    const finalPages = finalState.getAvailablePages();
-    if (finalPages.length > 0) {
-      const lastPage = Math.max(...finalPages);
-      if (lastPage !== finalState.currentPage) {
-        set({ currentPage: lastPage });
-        await settingsRepository.put("current-page", lastPage);
-      }
-    }
   },
   updateWidgetLayout: (id, updates, options = { persist: true }) => {
     set((state) => {
@@ -394,19 +351,54 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     set({ surfaceStyle: style });
     await settingsRepository.put("surface-style", style);
   },
-  setCurrentPage: async (page: number) => {
-    set({ currentPage: page });
-    await settingsRepository.put("current-page", page);
+  setCurrentTabId: async (tabId: number) => {
+    set({ currentTabId: tabId });
+    await settingsRepository.put("current-tab-id", tabId);
   },
-  setMaxRows: (maxRows: number) => {
-    set({ maxRows });
+  createTab: async (name?: string) => {
+    const tabs = get().tabs;
+    const maxOrder = tabs.length > 0 ? Math.max(...tabs.map(t => t.order ?? 0)) : 0;
+    const tabName = name || `Tab ${tabs.length + 1}`;
+    const newTab = await tabRepository.create({
+      name: tabName,
+      order: maxOrder + 1,
+    });
+    if (newTab) {
+      set((state) => ({ tabs: [...state.tabs, newTab] }));
+      await get().setCurrentTabId(newTab.id);
+    }
+    return newTab;
+  },
+  updateTab: async (id: number, updates: Partial<TabRecord>) => {
+    const updated = await tabRepository.update(id, updates);
+    if (updated) {
+      set((state) => ({
+        tabs: state.tabs.map(t => t.id === id ? updated : t),
+      }));
+    }
+  },
+  removeTab: async (id: number) => {
+    const tabs = get().tabs;
+    if (tabs.length <= 1) {
+      // Don't allow removing the last tab
+      return;
+    }
+    await tabRepository.remove(id);
+    const remainingTabs = tabs.filter(t => t.id !== id);
+    set({ tabs: remainingTabs });
+    
+    // If we removed the current tab, switch to the first remaining tab
+    if (get().currentTabId === id) {
+      if (remainingTabs.length > 0) {
+        await get().setCurrentTabId(remainingTabs[0].id);
+      }
+    }
   },
   getPageWidgets: (pageId: number) => {
     return get().widgets.filter((w) => w.pageId === pageId);
   },
-  getAvailablePages: () => {
-    const pages = new Set(get().widgets.map((w) => w.pageId));
-    return Array.from(pages).sort((a, b) => a - b);
+  getAvailableTabs: () => {
+    return get().tabs;
   },
 }));
 
