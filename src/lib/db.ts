@@ -234,11 +234,11 @@ const ensureDb = async () => {
         }
 
         if (oldVersion < 2) {
-          const updateIndexes = (storeName: keyof DashboardDB) => {
+          type StoreName = "notes" | "widgets" | "todos" | "quicklinks" | "scratchpads" | "settings" | "dataLibraryCategories" | "dataLibraryItems" | "notionPages" | "notionBlocks" | "tabs";
+          const updateIndexes = (storeName: StoreName) => {
             try {
-              const store = db.transaction(storeName, "readwrite").objectStore(
-                storeName
-              );
+              const tx = db.transaction(storeName, "readwrite");
+              const store = tx.objectStore(storeName) as unknown as IDBObjectStore;
               if (
                 storeName !== "widgets" &&
                 !store.indexNames.contains("widgetId")

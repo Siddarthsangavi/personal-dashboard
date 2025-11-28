@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
-import { Plus, X, Edit2 } from "lucide-react";
+import { Plus, Edit2, Trash2 } from "lucide-react";
 import { useDashboardStore } from "../store/dashboard-store";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,9 @@ export function ChromeTabs() {
   
   const [editingTabId, setEditingTabId] = useState<number | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabId: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
   
   const currentTab = tabs.find(t => t.id === currentTabId);
   
@@ -28,12 +30,13 @@ export function ChromeTabs() {
     }
   }, [editingTabId]);
 
-  const handleStartEdit = (tab: typeof tabs[0], e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation();
+  const handleStartEdit = (tabId: number) => {
+    const tab = tabs.find(t => t.id === tabId);
+    if (tab) {
+      setEditingTabId(tabId);
+      setEditValue(tab.name);
+      setContextMenu(null);
     }
-    setEditingTabId(tab.id);
-    setEditValue(tab.name);
   };
 
   const handleSaveEdit = async () => {
@@ -62,15 +65,49 @@ export function ChromeTabs() {
     await createTab();
   };
 
-  const handleRemoveTab = async (tabId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleRemoveTab = async (tabId: number) => {
     if (tabs.length <= 1) return; // Don't allow removing the last tab
     await removeTab(tabId);
+    setContextMenu(null);
   };
 
   const handleTabClick = (tabId: number) => {
     void setCurrentTabId(tabId);
   };
+
+  const handleContextMenu = (e: React.MouseEvent, tabId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ x: e.clientX, y: e.clientY, tabId });
+  };
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    if (!contextMenu) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
+        setContextMenu(null);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setContextMenu(null);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [contextMenu]);
 
   return (
     <div className="flex items-end gap-0 bg-background">
@@ -99,7 +136,7 @@ export function ChromeTabs() {
                 !isActive && "hover:bg-muted"
               )}
               onClick={() => handleTabClick(tab.id)}
-              onDoubleClick={() => handleStartEdit(tab)}
+              onContextMenu={(e) => handleContextMenu(e, tab.id)}
             >
             {isEditing ? (
               <Input
@@ -110,32 +147,12 @@ export function ChromeTabs() {
                 onKeyDown={handleKeyDown}
                 className="h-6 text-xs font-medium px-1.5 py-0.5"
                 onClick={(e) => e.stopPropagation()}
-                onDoubleClick={(e) => e.stopPropagation()}
+                onContextMenu={(e) => e.preventDefault()}
               />
             ) : (
-              <>
-                <span className="flex-1 text-xs font-medium truncate text-foreground">
-                  {tab.name}
-                </span>
-                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={(e) => handleStartEdit(tab, e)}
-                    className="p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
-                    title="Rename tab"
-                  >
-                    <Edit2 className="size-3" />
-                  </button>
-                  {tabs.length > 1 && (
-                    <button
-                      onClick={(e) => handleRemoveTab(tab.id, e)}
-                      className="p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive"
-                      title="Close tab"
-                    >
-                      <X className="size-3" />
-                    </button>
-                  )}
-                </div>
-              </>
+              <span className="flex-1 text-xs font-medium truncate text-foreground">
+                {tab.name}
+              </span>
             )}
           </div>
         );
@@ -152,6 +169,46 @@ export function ChromeTabs() {
       >
         <Plus className="size-4" />
       </button>
+
+      {/* Context Menu */}
+      {contextMenu && typeof window !== "undefined" && createPortal(
+        <div
+          ref={contextMenuRef}
+          className="fixed z-[9999] w-48 rounded-xl border border-border/70 bg-card p-2 shadow-2xl"
+          style={{
+            left: `${contextMenu.x}px`,
+            top: `${contextMenu.y}px`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <button
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleStartEdit(contextMenu.tabId);
+            }}
+          >
+            <Edit2 className="size-4" />
+            Rename
+          </button>
+          {tabs.length > 1 && (
+            <button
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                void handleRemoveTab(contextMenu.tabId);
+              }}
+            >
+              <Trash2 className="size-4" />
+              Delete Tab
+            </button>
+          )}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
