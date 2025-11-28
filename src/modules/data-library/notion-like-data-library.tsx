@@ -53,9 +53,20 @@ export function PageLibrary() {
   const { showToast } = useToast();
 
   const loadPagesWithChildren = useCallback(async (preserveSelection: boolean = false) => {
+    // Get currentTabId from store to ensure we have the latest value
+    const tabsStore = useDataLibraryTabsStore.getState();
+    const tabId = tabsStore.currentTabId;
+    
+    if (tabId === null) {
+      // No tab selected, clear pages
+      setPages([]);
+      setPagesWithChildren([]);
+      return;
+    }
+    
     // Recursively load children for a page
     const loadPageWithChildren = async (page: PageRecord): Promise<PageWithChildren> => {
-      const children = await pageRepository.list(page.id, currentTabId);
+      const children = await pageRepository.list(page.id, tabId);
       const childrenWithNested = await Promise.all(
         children.map(child => loadPageWithChildren(child))
       );
@@ -64,7 +75,7 @@ export function PageLibrary() {
 
     try {
       const currentSelectedId = preserveSelection ? selectedPageId : null;
-      const rootPages = await pageRepository.list(null, currentTabId);
+      const rootPages = await pageRepository.list(null, tabId);
       setPages(rootPages);
       
       // Recursively load all children
@@ -82,7 +93,7 @@ export function PageLibrary() {
       console.error("Failed to load pages:", error);
       showToast("Failed to load pages", "error");
     }
-  }, [showToast, selectedPageId, currentTabId]);
+  }, [showToast, selectedPageId]); // Keep selectedPageId for preserveSelection logic
 
   const loadPage = useCallback(async (pageId: number) => {
     try {
@@ -102,7 +113,12 @@ export function PageLibrary() {
       setLoading(true);
       try {
         await hydrateDataLibraryTabs();
-        await loadPagesWithChildren();
+        // Wait a bit to ensure currentTabId is set in the store
+        // Then reload pages with the current tab
+        const tabsStore = useDataLibraryTabsStore.getState();
+        if (tabsStore.currentTabId) {
+          await loadPagesWithChildren();
+        }
       } finally {
         setLoading(false);
       }
@@ -124,14 +140,20 @@ export function PageLibrary() {
       setSelectedPageId(null);
       setSelectedPage(null);
     }
-  }, [currentTabId, loadPagesWithChildren]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTabId]); // Only depend on currentTabId, not loadPagesWithChildren to prevent loops
 
   const handleCreatePage = async () => {
+    if (!currentTabId) {
+      showToast("Please select a tab first", "error");
+      return;
+    }
     try {
       const page = await pageRepository.create({
         title: "Untitled",
         content: "",
         parentId: null, // Always create at root level
+        tabId: currentTabId, // Associate with current tab
       });
       if (page) {
         // Reload pages with children
@@ -233,12 +255,14 @@ export function PageLibrary() {
         content: "",
         parentId: currentPage.parentId, // Keep the same parent level
         order: currentPage.order ?? currentPage.id, // Use the same order as the original page
+        tabId: currentTabId, // Associate with current tab
       });
 
       if (groupPage) {
-        // Move the current page under the group
+        // Move the current page under the group, preserving its tabId
         await pageRepository.update(pageId, {
           parentId: groupPage.id,
+          tabId: currentTabId, // Preserve tabId when moving
         });
 
         // Create a new page under the group
@@ -252,8 +276,10 @@ export function PageLibrary() {
         if (newPage) {
           // Expand the group and reload
           setExpandedPages((prev) => new Set([...prev, groupPage.id]));
-          await loadPagesWithChildren();
-          setSelectedPageId(newPage.id);
+          // Reload pages to show the new structure
+          await loadPagesWithChildren(false);
+          // Select the moved page (the one that was clicked) instead of the new page
+          setSelectedPageId(pageId);
           showToast("Pages grouped", "success");
         }
       }
@@ -329,12 +355,16 @@ export function PageLibrary() {
           await pageRepository.update(currentPageId, { title: finalTitle });
           // Only reload pages structure, not the selected page content
           // This prevents focus loss and page switching
-          const rootPages = await pageRepository.list(null);
+          // Get current tabId from store to filter pages correctly
+          const tabsStore = useDataLibraryTabsStore.getState();
+          const tabId = tabsStore.currentTabId;
+          
+          const rootPages = await pageRepository.list(null, tabId);
           setPages(rootPages);
           
           // Recursively reload children structure
           const loadPageWithChildren = async (page: PageRecord): Promise<PageWithChildren> => {
-            const children = await pageRepository.list(page.id);
+            const children = await pageRepository.list(page.id, tabId);
             const childrenWithNested = await Promise.all(
               children.map(child => loadPageWithChildren(child))
             );
