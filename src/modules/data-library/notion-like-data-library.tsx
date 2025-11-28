@@ -470,8 +470,10 @@ export function PageLibrary() {
       <div key={page.id}>
         <div
           className={cn(
-            "group flex items-center mb-1 rounded-lg",
-            isSelected && !hasChildren && "bg-accent"
+            "group flex items-center mb-1 rounded-lg transition-colors",
+            isSelected && !hasChildren && "bg-accent",
+            !isSelected && !hasChildren && "hover:bg-accent/50",
+            hasChildren && "hover:bg-accent/50"
           )}
         >
           <div className="flex items-center flex-1 min-w-0" style={{ paddingLeft: `${level * 16}px` }}>
@@ -495,7 +497,7 @@ export function PageLibrary() {
                   onContextMenu={(e) => handleContextMenu(e, page.id)}
                   className={cn(
                     "flex-1 flex items-center px-3 py-2 rounded-lg text-left transition-colors min-w-0",
-                    "hover:bg-accent/50 text-foreground"
+                    isSelected ? "text-accent-foreground" : "text-foreground"
                   )}
                 >
                   <Folder className="size-4 flex-shrink-0 mr-2" />
@@ -524,8 +526,8 @@ export function PageLibrary() {
                   className={cn(
                     "flex-1 flex items-center px-3 py-2 rounded-lg text-left transition-colors min-w-0",
                     isSelected
-                      ? "bg-accent text-accent-foreground"
-                      : "hover:bg-accent/50 text-foreground"
+                      ? "text-accent-foreground"
+                      : "text-foreground"
                   )}
                 >
                   <File className="size-4 flex-shrink-0 mr-2" />

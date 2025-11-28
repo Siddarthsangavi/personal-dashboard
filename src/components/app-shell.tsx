@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LayoutDashboard, Library } from "lucide-react";
-import Image from "next/image";
 import Dashboard from "./dashboard";
+import { Logo } from "./logo";
 import { PageLibrary } from "@/modules/data-library/notion-like-data-library";
 import { AppearanceMenu } from "@/modules/dashboard/components/appearance-menu";
 import { ChromeTabs } from "@/modules/dashboard/components/chrome-tabs";
@@ -22,13 +22,7 @@ export function AppShell() {
         <div className="flex-shrink-0 bg-background">
           <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Image 
-                src="/icon.svg" 
-                alt="Panelaris Logo" 
-                width={24} 
-                height={24}
-                className="dark:invert"
-              />
+              <Logo width={36} height={36} />
               <TabsList className="w-fit">
                 <TabsTrigger value="productivity" className="gap-2">
                   <LayoutDashboard className="size-4" />

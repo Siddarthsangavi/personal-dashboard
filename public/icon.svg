@@ -1,6 +1,49 @@
-<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="20" y="20" width="200" height="50" rx="15" fill="black"/>
-<rect x="20" y="90" width="200" height="50" rx="15" fill="black"/>
-<rect x="20" y="160" width="200" height="50" rx="15" fill="black"/>
-</svg>
+<svg viewBox="10 10 80 80" xmlns="http://www.w3.org/2000/svg">
 
+  <style>
+
+    /* Light Mode */
+
+    .block1 { fill: #CBD5E1; }
+
+    .block2 { fill: #94A3B8; }
+
+    .block3 { fill: #64748B; }
+
+    .block4 { fill: #334155; }
+
+
+
+    /* Dark Mode */
+
+    @media (prefers-color-scheme: dark) {
+
+      .block1 { fill: #334155; }
+
+      .block2 { fill: #475569; }
+
+      .block3 { fill: #64748B; }
+
+      .block4 { fill: #CBD5E1; }
+
+    }
+
+  </style>
+
+
+
+  <!-- Modular blocks only -->
+
+  <g transform="translate(20,20)">
+
+    <rect width="20" height="20" rx="4" class="block1"/>
+
+    <rect x="24" width="36" height="20" rx="4" class="block2"/>
+
+    <rect y="24" width="36" height="36" rx="4" class="block3"/>
+
+    <rect x="40" y="24" width="20" height="36" rx="4" class="block4"/>
+
+  </g>
+
+</svg>
