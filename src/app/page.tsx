@@ -13,8 +13,8 @@ function MobileMessage() {
             Desktop Experience Required
           </h1>
           <p className="text-muted-foreground leading-relaxed">
-            This dashboard is designed for desktop and laptop screens. 
-            Please visit this website on a computer or laptop for the best experience.
+            This dashboard requires a minimum screen width of 1200px. 
+            Please use a larger screen or expand your browser window for the best experience.
           </p>
         </div>
         <div className="pt-4 border-t border-border">
@@ -35,8 +35,8 @@ export default function Home() {
     setIsMounted(true);
     
     const checkMobile = () => {
-      // Check if screen width is less than 768px (typical mobile breakpoint)
-      setIsMobile(window.innerWidth < 768);
+      // Check if screen width is less than 1200px (minimum required width)
+      setIsMobile(window.innerWidth < 1200);
     };
 
     // Check on mount
@@ -64,7 +64,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen" style={{ width: '100vw', minWidth: '1200px', overflowX: 'auto' }}>
       <AppShell />
     </main>
   );

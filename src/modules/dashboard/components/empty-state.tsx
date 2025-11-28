@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Sparkles, LayoutGrid, Zap } from "lucide-react";
+import Image from "next/image";
 
 interface EmptyStateProps {
   onAdd: () => void;
@@ -13,7 +14,13 @@ export function EmptyState({ onAdd }: EmptyStateProps) {
       <div className="relative">
         <div className="absolute inset-0 rounded-full bg-primary/10 blur-2xl" />
         <div className="relative rounded-full border-2 border-primary/20 bg-primary/5 p-4">
-          <LayoutGrid className="size-8 text-primary" />
+          <Image 
+            src="/icon.svg" 
+            alt="Panelaris Logo" 
+            width={32} 
+            height={32}
+            className="dark:invert"
+          />
         </div>
       </div>
       <div className="space-y-3">

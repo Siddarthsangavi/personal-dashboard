@@ -6,6 +6,7 @@ import { WidgetFrame } from "./widget-frame";
 import { useDashboardStore } from "../store/dashboard-store";
 import { GRID_SETTINGS, SurfaceStyle } from "../types";
 import { useElementSize } from "../hooks/use-element-size";
+import { useResponsiveGrid } from "../hooks/use-responsive-grid";
 import { WidgetRecord } from "../types";
 import { WidgetRenderer } from "@/modules/widgets/widget-renderer";
 import { useToast } from "@/components/ui/toast";
@@ -76,6 +77,8 @@ export function WidgetBoard() {
   );
 
   const [boardRef, { width, height }] = useElementSize<HTMLDivElement>();
+  // Use actual width for grid, but calculate column width based on fixed 1200px to prevent shrinking
+  const { columns: responsiveColumns, minColumnWidth } = useResponsiveGrid(width);
 
   const removeWidget = useCallback(
     async (id: number) => {
@@ -92,8 +95,8 @@ export function WidgetBoard() {
       if (widget.type === "analog-clock") {
         const minSize = Math.max(widget.minSize.w, widget.minSize.h);
         // Allow growing to any square size up to grid boundaries (unlimited rows)
-        const maxSizeX = GRID_SETTINGS.columns - widget.position.x;
-        const maxSize = Math.min(GRID_SETTINGS.columns, maxSizeX);
+        const maxSizeX = responsiveColumns - widget.position.x;
+        const maxSize = Math.min(responsiveColumns, maxSizeX);
         return {
           i: widget.id.toString(),
           x: widget.position.x,
@@ -114,11 +117,11 @@ export function WidgetBoard() {
         h: widget.size.h,
         minW: widget.minSize.w,
         minH: widget.minSize.h,
-        maxW: widget.type === "date" ? 3 : GRID_SETTINGS.columns,
+        maxW: widget.type === "date" ? 3 : responsiveColumns,
         maxH: widget.type === "date" ? 1 : undefined, // Unlimited height
       };
     });
-  }, [widgets]);
+  }, [widgets, responsiveColumns]);
 
 
   // Handle layout change from react-grid-layout
@@ -186,7 +189,7 @@ export function WidgetBoard() {
           }
           
           // Clamp to valid range (unlimited rows)
-          const maxSizeX = GRID_SETTINGS.columns - item.x;
+          const maxSizeX = responsiveColumns - item.x;
           const maxSize = maxSizeX;
           
           const squareSize = Math.max(
@@ -195,7 +198,7 @@ export function WidgetBoard() {
           );
           
           // Ensure position doesn't exceed boundaries with new square size
-          const maxValidX = Math.max(0, GRID_SETTINGS.columns - squareSize);
+          const maxValidX = Math.max(0, responsiveColumns - squareSize);
           const newX = Math.max(0, Math.min(item.x, maxValidX));
           const newY = Math.max(0, item.y); // No upper limit on Y
           
@@ -222,7 +225,7 @@ export function WidgetBoard() {
         }
 
         // Ensure widget doesn't exceed right boundary
-        const newX = Math.max(0, Math.min(item.x, GRID_SETTINGS.columns - item.w));
+        const newX = Math.max(0, Math.min(item.x, responsiveColumns - item.w));
         
         // No upper limit on Y position (unlimited rows)
         const newY = Math.max(0, item.y);
@@ -230,7 +233,7 @@ export function WidgetBoard() {
         // Ensure widget doesn't exceed right boundary
         const newW = Math.max(
           widget.minSize.w,
-          Math.min(item.w, GRID_SETTINGS.columns - newX)
+          Math.min(item.w, responsiveColumns - newX)
         );
         
         // No upper limit on height (unlimited rows)
@@ -276,18 +279,12 @@ export function WidgetBoard() {
   }, [currentTabId, updateLayout]);
 
   // Calculate rowHeight to match column width for square widgets
-  // Column width = (width - gaps) / columns
-  // For squares: rowHeight should equal columnWidth exactly
+  // Use fixed column width (based on 1200px) to prevent shrinking, but allow grid to expand
   const rowHeight = useMemo(() => {
-    if (!width || width <= 0) return GRID_SETTINGS.rowHeight;
-    // Total gap space: (columns + 1) gaps between and around columns
-    const totalGapWidth = GRID_SETTINGS.gap * (GRID_SETTINGS.columns + 1);
-    const availableWidth = width - totalGapWidth;
-    const columnWidth = availableWidth / GRID_SETTINGS.columns;
-    // Use the calculated column width as row height to ensure 1x1 widgets are square
-    // Don't use Math.max - use the calculated value directly
-    return Math.floor(columnWidth);
-  }, [width]);
+    // Use the fixed column width from responsiveGrid (calculated from 1200px)
+    // This ensures widgets maintain their size even when grid expands
+    return Math.floor(minColumnWidth);
+  }, [minColumnWidth]);
   const margin: [number, number] = [GRID_SETTINGS.gap, GRID_SETTINGS.gap];
 
 
@@ -310,18 +307,18 @@ export function WidgetBoard() {
   }), [minGridHeight]);
 
   return (
-    <section className="dashboard-board" style={{ minHeight: '400px' }}>
+    <section className="dashboard-board" style={{ minHeight: '400px', width: '100%', minWidth: '1200px' }}>
       <div
         className="dashboard-board__canvas"
         ref={boardRef}
-        style={{ width: "100%", minHeight: '400px' }}
+        style={{ width: "100%", minWidth: '1200px', minHeight: '400px' }}
       >
         {width > 0 && height > 0 ? (
           <GridLayout
             className="layout"
             style={gridLayoutStyle}
             layout={layout}
-            cols={GRID_SETTINGS.columns}
+            cols={responsiveColumns}
             rowHeight={rowHeight}
             width={width}
             margin={margin}

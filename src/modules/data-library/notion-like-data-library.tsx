@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { RichTextEditor } from "./rich-text-editor";
 import { useDashboardStore } from "@/modules/dashboard/store/dashboard-store";
+import { useDataLibraryTabsStore } from "./store/data-library-tabs-store";
 
 interface PageWithChildren extends PageRecord {
   children?: PageWithChildren[];
@@ -46,13 +47,15 @@ export function PageLibrary() {
   const titleUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const surface = useDashboardStore((state) => state.surfaceStyle);
+  const hydrateDataLibraryTabs = useDataLibraryTabsStore((state) => state.hydrate);
+  const currentTabId = useDataLibraryTabsStore((state) => state.currentTabId);
 
   const { showToast } = useToast();
 
   const loadPagesWithChildren = useCallback(async (preserveSelection: boolean = false) => {
     // Recursively load children for a page
     const loadPageWithChildren = async (page: PageRecord): Promise<PageWithChildren> => {
-      const children = await pageRepository.list(page.id);
+      const children = await pageRepository.list(page.id, currentTabId);
       const childrenWithNested = await Promise.all(
         children.map(child => loadPageWithChildren(child))
       );
@@ -61,7 +64,7 @@ export function PageLibrary() {
 
     try {
       const currentSelectedId = preserveSelection ? selectedPageId : null;
-      const rootPages = await pageRepository.list(null);
+      const rootPages = await pageRepository.list(null, currentTabId);
       setPages(rootPages);
       
       // Recursively load all children
@@ -79,7 +82,7 @@ export function PageLibrary() {
       console.error("Failed to load pages:", error);
       showToast("Failed to load pages", "error");
     }
-  }, [showToast, selectedPageId]);
+  }, [showToast, selectedPageId, currentTabId]);
 
   const loadPage = useCallback(async (pageId: number) => {
     try {
@@ -98,6 +101,7 @@ export function PageLibrary() {
     const init = async () => {
       setLoading(true);
       try {
+        await hydrateDataLibraryTabs();
         await loadPagesWithChildren();
       } finally {
         setLoading(false);
@@ -112,6 +116,15 @@ export function PageLibrary() {
       void loadPage(selectedPageId);
     }
   }, [selectedPageId, loadPage]);
+
+  // Reload pages when tab changes
+  useEffect(() => {
+    if (currentTabId !== null) {
+      void loadPagesWithChildren(false);
+      setSelectedPageId(null);
+      setSelectedPage(null);
+    }
+  }, [currentTabId, loadPagesWithChildren]);
 
   const handleCreatePage = async () => {
     try {
@@ -233,6 +246,7 @@ export function PageLibrary() {
           title: "Untitled",
           content: "",
           parentId: groupPage.id,
+          tabId: currentTabId, // Associate with current tab
         });
 
         if (newPage) {

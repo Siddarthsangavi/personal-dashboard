@@ -52,6 +52,9 @@
   left: 0 !important; // Lock position
   transform: none !important; // Prevent transforms
   margin: 0 !important; // Prevent margins
+  // Responsive: Ensure content scales properly
+  overflow: auto; // Allow scrolling if content is too large
+  word-wrap: break-word; // Break long words
 }
 
 // CRITICAL: Prevent transitions from affecting position when switching modes

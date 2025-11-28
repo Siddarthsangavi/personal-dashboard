@@ -1,4 +1,4 @@
-## Personalised Dashboard
+## Panelaris
 
 Offline-first workspace where users can mix todos, notes, and icon-only quick links, then resize/drag each widget without third-party grid libraries.
 

@@ -154,8 +154,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         settingsRepository.get<number>("current-tab-id"),
       ]);
       
-      // Load tabs
-      let tabs = await tabRepository.list();
+      // Load tabs (only productivity context)
+      let tabs = await tabRepository.list("productivity");
       
       // If no tabs exist, create a default one
       // All existing widgets will be migrated to use this tab
@@ -163,6 +163,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         const defaultTab = await tabRepository.create({
           name: "Tab 1",
           order: 1,
+          context: "productivity",
         });
         if (defaultTab) {
           tabs = [defaultTab];
@@ -398,6 +399,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     const newTab = await tabRepository.create({
       name: tabName,
       order: maxOrder + 1,
+      context: "productivity",
     });
     if (newTab) {
       set((state) => ({ tabs: [...state.tabs, newTab] }));

@@ -52,6 +52,7 @@ export interface TabRecord {
   id: number;
   name: string;
   order: number;
+  context: "productivity" | "data-library"; // Distinguish between Productivity and Data Library tabs
   createdAt: string;
   updatedAt: string;
 }
@@ -85,6 +86,7 @@ export interface PageRecord {
   title: string;
   content?: string; // Store the entire page content as plain text (optional for backward compatibility)
   parentId: number | null; // For nested pages
+  tabId?: number | null; // For associating pages with Data Library tabs
   icon?: string;
   order?: number; // For ordering pages within the same parent (optional for backward compatibility)
   createdAt: string;
@@ -145,7 +147,7 @@ interface DashboardDB extends DBSchema {
   notionPages: {
     key: number;
     value: PageRecord;
-    indexes: { parentId: number };
+    indexes: { parentId: number; tabId: number };
   };
   notionBlocks: {
     key: number;
@@ -155,12 +157,12 @@ interface DashboardDB extends DBSchema {
   tabs: {
     key: number;
     value: TabRecord;
-    indexes: { order: number };
+    indexes: { order: number; context: "productivity" | "data-library" };
   };
 }
 
-const DB_NAME = "personalised-dashboard";
-const DB_VERSION = 7;
+const DB_NAME = "panelaris";
+const DB_VERSION = 8;
 
 let dbPromise: Promise<IDBPDatabase<DashboardDB>> | null = null;
 
@@ -295,6 +297,19 @@ const ensureDb = async () => {
               autoIncrement: true,
             });
             pagesStore.createIndex("parentId", "parentId", { unique: false });
+            if (!pagesStore.indexNames.contains("tabId")) {
+              pagesStore.createIndex("tabId", "tabId", { unique: false });
+            }
+          } else {
+            // Add tabId index if it doesn't exist
+            const pagesStore = db.transaction("notionPages", "readwrite", { durability: "relaxed" }).objectStore("notionPages");
+            if (pagesStore && !pagesStore.indexNames.contains("tabId")) {
+              try {
+                (pagesStore as unknown as IDBObjectStore).createIndex("tabId", "tabId", { unique: false });
+              } catch (e) {
+                // Index might already exist, ignore
+              }
+            }
           }
           if (!db.objectStoreNames.contains("notionBlocks")) {
             const blocksStore = db.createObjectStore("notionBlocks", {
@@ -318,6 +333,31 @@ const ensureDb = async () => {
               autoIncrement: true,
             });
             tabsStore.createIndex("order", "order", { unique: false });
+          }
+        }
+
+        if (oldVersion < 8) {
+          // Migration: Add context field to existing tabs (default to "productivity")
+          // Add context index - migration of existing data will be handled lazily in tabRepository
+          if (db.objectStoreNames.contains("tabs")) {
+            try {
+              const transaction = db.transaction("tabs", "readwrite", { durability: "relaxed" });
+              const tabsStore = transaction.objectStore("tabs");
+              // Add index for context if it doesn't exist
+              if (tabsStore && !tabsStore.indexNames.contains("context")) {
+                (tabsStore as unknown as IDBObjectStore).createIndex("context", "context", { unique: false });
+              }
+            } catch (e) {
+              // Index might already exist, ignore
+            }
+          } else {
+            // If tabs store doesn't exist, create it with context index
+            const tabsStore = db.createObjectStore("tabs", {
+              keyPath: "id",
+              autoIncrement: true,
+            });
+            tabsStore.createIndex("order", "order", { unique: false });
+            tabsStore.createIndex("context", "context", { unique: false });
           }
         }
       },
@@ -496,17 +536,35 @@ export const settingsRepository = {
 
 // Page repositories
 export const pageRepository = {
-  async list(parentId: number | null = null): Promise<PageRecord[]> {
+  async list(parentId: number | null = null, tabId?: number | null): Promise<PageRecord[]> {
     if (!isBrowser) return [];
     return withDb(async (db) => {
       let pages: PageRecord[];
       if (parentId === null) {
         // For null parentId, get all pages and filter
         const allPages = await db.getAll("notionPages");
-        pages = allPages.filter((page) => page.parentId === null);
+        pages = allPages.filter((page) => {
+          const matchesParent = page.parentId === null;
+          if (tabId === undefined) return matchesParent;
+          // Match tabId: if tabId is null, match pages with null/undefined tabId; otherwise match exact tabId
+          const matchesTab = tabId === null 
+            ? (page.tabId === null || page.tabId === undefined)
+            : page.tabId === tabId;
+          return matchesParent && matchesTab;
+        });
       } else {
         const index = db.transaction("notionPages", "readonly").store.index("parentId");
-        pages = await index.getAll(parentId);
+        const parentPages = await index.getAll(parentId);
+        // Also filter by tabId if provided
+        if (tabId !== undefined) {
+          pages = parentPages.filter(page => 
+            tabId === null 
+              ? (page.tabId === null || page.tabId === undefined)
+              : page.tabId === tabId
+          );
+        } else {
+          pages = parentPages;
+        }
       }
       
       // Lazy migration: If any page is missing order, assign it based on id
@@ -729,10 +787,36 @@ export const dataLibraryItemRepository = {
 };
 
 export const tabRepository = {
-  async list(): Promise<TabRecord[]> {
+  async list(context?: "productivity" | "data-library"): Promise<TabRecord[]> {
     if (!isBrowser) return [];
     return withDb(async (db) => {
-      const allTabs = await db.getAll("tabs");
+      // First, get all tabs to handle migration
+      let allTabs: TabRecord[] = await db.getAll("tabs");
+      
+      // Migrate tabs without context field (lazy migration)
+      const tabsToUpdate: TabRecord[] = [];
+      for (const tab of allTabs) {
+        if (!("context" in tab) || !tab.context) {
+          tabsToUpdate.push({ ...tab, context: "productivity" });
+        }
+      }
+      
+      // Update tabs that need migration
+      if (tabsToUpdate.length > 0) {
+        const tx = db.transaction("tabs", "readwrite");
+        for (const tab of tabsToUpdate) {
+          await tx.store.put(tab);
+        }
+        await tx.done;
+        // Reload after migration
+        allTabs = await db.getAll("tabs");
+      }
+      
+      // Filter by context if specified
+      if (context) {
+        allTabs = allTabs.filter(tab => tab.context === context);
+      }
+      
       // Sort by order
       return allTabs.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     });
@@ -740,7 +824,7 @@ export const tabRepository = {
   async create(payload: Omit<TabRecord, "id" | "createdAt" | "updatedAt">): Promise<TabRecord | null> {
     if (!isBrowser) return null;
     const now = timestamp();
-    const allTabs = await this.list();
+    const allTabs = await this.list(payload.context);
     const maxOrder = allTabs.length > 0 ? Math.max(...allTabs.map(t => t.order ?? 0)) : 0;
     const record: Omit<TabRecord, "id"> = {
       ...payload,

@@ -36,16 +36,16 @@ export function DashboardShell() {
   const hasWidgets = widgets.length > 0;
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden relative">
+    <div className="flex h-screen flex-col overflow-hidden relative" style={{ width: '100%', minWidth: '1200px' }}>
       {/* Background container that extends to bottom of screen */}
       <div className="absolute inset-0 bg-background -z-10" />
       
-      <div className="flex-shrink-0 p-4 relative z-0">
+      <div className="flex-shrink-0 p-2 sm:p-4 relative z-0">
         <DashboardToolbar
           onAdd={() => setPickerOpen(true)}
         />
       </div>
-      <div className="flex-1 overflow-hidden px-4 pb-4 relative z-0">
+      <div className="flex-1 overflow-hidden px-2 sm:px-4 pb-2 sm:pb-4 relative z-0">
         {loading ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 6 }).map((_, i) => (
