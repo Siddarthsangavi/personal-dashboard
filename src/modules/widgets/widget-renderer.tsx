@@ -37,7 +37,7 @@ export function WidgetRenderer({
 
   switch (widget.type) {
     case "todo":
-      return <TodoWidget widget={widget} />;
+      return <TodoWidget widget={widget} setHeaderAction={setHeaderAction || (() => {})} />;
     case "notes":
       return (
         <NotesWidget widget={widget} setHeaderActions={setHeaderActions} />
@@ -45,17 +45,17 @@ export function WidgetRenderer({
     case "quick-links":
       return <QuickLinksWidget widget={widget} onRemove={onRemove} />;
     case "analog-clock":
-      return <AnalogClockWidget widget={widget} setHeaderAction={setHeaderAction} />;
+      return <AnalogClockWidget widget={widget} setHeaderAction={setHeaderAction || (() => {})} />;
     case "date":
-      return <DateWidget widget={widget} setHeaderAction={setHeaderAction} />;
+      return <DateWidget widget={widget} setHeaderAction={setHeaderAction || (() => {})} />;
     case "digital-clock":
-      return <DigitalClockWidget widget={widget} setHeaderAction={setHeaderAction} />;
+      return <DigitalClockWidget widget={widget} setHeaderAction={setHeaderAction || (() => {})} />;
     case "weather":
-      return <WeatherWidget widget={widget} />;
+      return <WeatherWidget widget={widget} setHeaderAction={setHeaderAction || (() => {})} />;
     case "calendar":
-      return <CalendarWidget widget={widget} setHeaderAction={setHeaderAction} />;
+      return <CalendarWidget widget={widget} setHeaderAction={setHeaderAction || (() => {})} />;
     case "pomodoro":
-      return <PomodoroWidget widget={widget} />;
+      return <PomodoroWidget widget={widget} setHeaderAction={setHeaderAction || (() => {})} />;
     case "scratchpad":
       return <ScratchpadWidget widget={widget} />;
     default:

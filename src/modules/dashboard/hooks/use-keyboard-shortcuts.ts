@@ -6,8 +6,9 @@ export function useKeyboardShortcuts(onShowShortcuts?: () => void) {
   const removeWidget = useDashboardStore((state) => state.removeWidget);
   const duplicateWidget = useDashboardStore((state) => state.duplicateWidget);
   const widgets = useDashboardStore((state) => state.widgets);
-  const currentPage = useDashboardStore((state) => state.currentPage);
+  const currentTabId = useDashboardStore((state) => state.currentTabId);
   const getPageWidgets = useDashboardStore((state) => state.getPageWidgets);
+  const createTab = useDashboardStore((state) => state.createTab);
   const { showToast } = useToast();
   const onShowShortcutsRef = useRef(onShowShortcuts);
 
@@ -32,38 +33,40 @@ export function useKeyboardShortcuts(onShowShortcuts?: () => void) {
         onShowShortcutsRef.current?.();
       }
 
-      // Delete/Backspace: Remove last widget on current page
+      // Delete/Backspace: Remove last widget on current tab
       if (
         (event.key === "Delete" || event.key === "Backspace") &&
         !event.ctrlKey &&
         !event.metaKey
       ) {
-        const pageWidgets = getPageWidgets(currentPage);
-        if (pageWidgets.length > 0) {
-          const lastWidget = pageWidgets[pageWidgets.length - 1];
-          void removeWidget(lastWidget.id);
-          showToast("Widget removed", "success");
+        if (currentTabId) {
+          const pageWidgets = getPageWidgets(currentTabId);
+          if (pageWidgets.length > 0) {
+            const lastWidget = pageWidgets[pageWidgets.length - 1];
+            void removeWidget(lastWidget.id);
+            showToast("Widget removed", "success");
+          }
         }
       }
 
       // Ctrl/Cmd + D: Duplicate last widget
       if ((event.ctrlKey || event.metaKey) && event.key === "d") {
         event.preventDefault();
-        const pageWidgets = getPageWidgets(currentPage);
-        if (pageWidgets.length > 0) {
-          const lastWidget = pageWidgets[pageWidgets.length - 1];
-          void duplicateWidget(lastWidget.id);
-          showToast("Widget duplicated", "success");
+        if (currentTabId) {
+          const pageWidgets = getPageWidgets(currentTabId);
+          if (pageWidgets.length > 0) {
+            const lastWidget = pageWidgets[pageWidgets.length - 1];
+            void duplicateWidget(lastWidget.id);
+            showToast("Widget duplicated", "success");
+          }
         }
       }
 
-      // Ctrl/Cmd + N: New page
+      // Ctrl/Cmd + N: New tab
       if ((event.ctrlKey || event.metaKey) && event.key === "n") {
         event.preventDefault();
-        const availablePages = new Set(widgets.map((w) => w.pageId));
-        const maxPage = Math.max(...availablePages, 1);
-        useDashboardStore.getState().setCurrentPage(maxPage + 1);
-        showToast("New page created", "success");
+        void createTab();
+        showToast("New tab created", "success");
       }
     };
 
@@ -71,10 +74,11 @@ export function useKeyboardShortcuts(onShowShortcuts?: () => void) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
     widgets,
-    currentPage,
+    currentTabId,
     getPageWidgets,
     removeWidget,
     duplicateWidget,
+    createTab,
     showToast,
   ]);
 }

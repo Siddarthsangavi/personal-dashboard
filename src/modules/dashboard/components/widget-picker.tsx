@@ -78,7 +78,7 @@ export function WidgetPicker({ open, onOpenChange }: WidgetPickerProps) {
           ) : (
             filteredDefinitions.map((definition) => {
             const IconComponent =
-              (Icons as Record<string, LucideIcon>)[definition.icon] ??
+              (Icons as unknown as Record<string, LucideIcon>)[definition.icon] ??
               Icons.LayoutGrid;
             return (
               <button

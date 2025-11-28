@@ -26,6 +26,7 @@ interface DashboardState {
     options?: { persist?: boolean }
   ) => void;
   removeWidget: (id: number) => Promise<void>;
+  duplicateWidget: (id: number) => Promise<void>;
   setSurfaceStyle: (style: SurfaceStyle) => Promise<void>;
   setCurrentTabId: (tabId: number) => Promise<void>;
   createTab: (name?: string) => Promise<TabRecord | null>;
@@ -346,6 +347,41 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         widgets,
       };
     });
+  },
+  duplicateWidget: async (id: number) => {
+    const state = get();
+    const widget = state.widgets.find((w) => w.id === id);
+    if (!widget) {
+      console.warn(`Widget with id ${id} not found`);
+      return;
+    }
+
+    const pageWidgets = state.widgets.filter((w) => w.pageId === widget.pageId);
+    const shadow: Rect[] = pageWidgets.map((w) => ({
+      position: w.position,
+      size: w.size,
+    }));
+
+    // Find next available position for the duplicate
+    const position = findNextSlot(shadow, widget.size);
+
+    const payload: Omit<WidgetRecord, "id" | "createdAt" | "updatedAt"> = {
+      type: widget.type,
+      title: widget.title,
+      position,
+      size: widget.size,
+      minSize: widget.minSize,
+      surface: widget.surface,
+      isLocked: widget.isLocked,
+      pageId: widget.pageId,
+    };
+
+    const created = await widgetRepository.create(payload);
+    if (created) {
+      set((state) => ({
+        widgets: normalizeWidgets([...state.widgets, created]),
+      }));
+    }
   },
   setSurfaceStyle: async (style) => {
     set({ surfaceStyle: style });

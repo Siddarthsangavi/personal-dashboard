@@ -66,7 +66,12 @@ export function WidgetBoard() {
   const { showToast } = useToast();
 
   const widgets = useMemo(
-    () => allWidgets.filter((w) => w.pageId === currentTabId),
+    () => {
+      if (!currentTabId) {
+        return [];
+      }
+      return allWidgets.filter((w) => w.pageId === currentTabId);
+    },
     [allWidgets, currentTabId]
   );
 
@@ -231,21 +236,21 @@ export function WidgetBoard() {
         // No upper limit on height (unlimited rows)
         const newH = Math.max(widget.minSize.h, item.h);
         
-        // Only update if position or size actually changed
-        if (
-          widget.position.x !== newX ||
-          widget.position.y !== newY ||
-          widget.size.w !== newW ||
-          widget.size.h !== newH
-        ) {
-          updateLayout(
-            widgetId,
-            {
-              position: { x: newX, y: newY },
-              size: { w: newW, h: newH },
-            },
-            { persist: false }
-          );
+          // Only update if position or size actually changed
+          if (
+            widget.position.x !== newX ||
+            widget.position.y !== newY ||
+            widget.size.w !== newW ||
+            widget.size.h !== newH
+          ) {
+            updateLayout(
+              widgetId,
+              {
+                position: { x: newX, y: newY },
+                size: { w: newW, h: newH },
+              },
+              { persist: false }
+            );
         }
       });
     },
@@ -305,13 +310,13 @@ export function WidgetBoard() {
   }), [minGridHeight]);
 
   return (
-    <section className="dashboard-board">
+    <section className="dashboard-board" style={{ minHeight: '400px' }}>
       <div
         className="dashboard-board__canvas"
         ref={boardRef}
-        style={{ width: "100%" }}
+        style={{ width: "100%", minHeight: '400px' }}
       >
-        {width > 0 && height > 0 && (
+        {width > 0 && height > 0 ? (
           <GridLayout
             className="layout"
             style={gridLayoutStyle}
@@ -343,7 +348,11 @@ export function WidgetBoard() {
               </div>
             ))}
           </GridLayout>
-        )}
+        ) : widgets.length > 0 ? (
+          <div className="text-muted-foreground text-sm p-4">
+            Initializing board... ({widgets.length} widget{widgets.length !== 1 ? 's' : ''} ready)
+          </div>
+        ) : null}
       </div>
     </section>
   );

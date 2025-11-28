@@ -38,7 +38,7 @@ export function WidgetStats() {
               const definition = widgetCatalog[type as keyof typeof widgetCatalog];
               if (!definition) return null;
               const IconComponent =
-                (Icons as Record<string, LucideIcon>)[definition.icon] ?? Icons.LayoutGrid;
+                (Icons as unknown as Record<string, LucideIcon>)[definition.icon] ?? Icons.LayoutGrid;
               return (
                 <div key={type} className="flex items-center gap-1">
                   <IconComponent className="size-3" />

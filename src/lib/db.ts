@@ -426,14 +426,15 @@ const buildCrud = <T extends { id: number; widgetId: number }>(
   storeName: "todos" | "notes" | "quicklinks" | "scratchpads"
 ) => {
   const api = {
-    async list(widgetId: number) {
+    async list(widgetId: number): Promise<T[]> {
       if (!isBrowser) return [] as T[];
-      return withDb(async (db) => {
+      const result = await withDb(async (db) => {
         const index = db
           .transaction(storeName, "readonly")
           .store.index("widgetId");
         return index.getAll(widgetId);
       });
+      return (result ?? []) as unknown as T[];
     },
     async create(payload: Omit<T, "id" | "createdAt" | "updatedAt">) {
       if (!isBrowser) return null;
