@@ -137,12 +137,11 @@ export function WidgetFrame({
         <div 
           className={cn("widget-card__content", hideTitleBar && "widget-card__drag-area")}
           style={
-            // CRITICAL: Don't set padding: 0 for widgets without title bars in glass/neumorphic modes
-            // The CSS will handle padding in those modes to prevent content shifting
-            // For widgets without title bars, only set padding: 0 in default mode
-            // In glass/neumorphic modes, CSS will add padding to compensate for visual effects
-            hideTitleBar && surface === "default"
-              ? (widget.type === "quick-links" || widget.type === "digital-clock" || widget.type === "date"
+            // Quick links widget needs no padding in all modes
+            widget.type === "quick-links"
+              ? { padding: 0 }
+              : hideTitleBar && surface === "default"
+              ? (widget.type === "digital-clock" || widget.type === "date"
                   ? { padding: 0 } 
                   : undefined)
               : widget.type === "pomodoro"

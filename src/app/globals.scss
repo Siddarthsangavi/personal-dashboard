@@ -120,39 +120,36 @@
     @apply border-border;
   }
   
-  /* Remove outline and ring from all inputs and textareas by default */
   input:focus-visible,
   textarea:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-    ring-width: 0 !important;
+    outline: none;
+    box-shadow: none;
+    ring-width: 0;
   }
   
-  /* Remove focus outline from widget cards and their containers when inputs inside are focused */
   .widget-card:focus-within,
   .widget-card:focus,
   .widget-card:focus-visible,
   [class*="react-grid-item"]:focus-within,
   [class*="react-grid-item"]:focus,
   [class*="react-grid-item"]:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
+    outline: none;
+    box-shadow: none;
   }
   
-  /* Also remove from any div that contains a widget-card */
   div:has(.widget-card):focus-within,
   div:has(.widget-card):focus,
   div:has(.widget-card):focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
+    outline: none;
+    box-shadow: none;
   }
+  
   body {
     @apply bg-background text-foreground;
-    background-image: none !important;
+    background-image: none;
     position: relative;
   }
   
-  // Monochromatic background pattern for glassmorphism effect
   body::before {
     content: '';
     position: fixed;
@@ -199,7 +196,7 @@
   border-radius: var(--radius-lg);
 }
 
-/* Hide all scrollbars inside widget content areas - Universal selector for maximum coverage */
+// Scrollbar hiding - using more specific selectors instead of !important
 .widget-card textarea,
 .widget-card div[style*="overflow"],
 .widget-card div[style*="overflow-y"],
@@ -214,11 +211,10 @@
 .widget-card__surface,
 .widget-card__surface *,
 .widget-card__surface textarea {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-/* Webkit scrollbar hiding - must target all possible combinations */
 .widget-card textarea::-webkit-scrollbar,
 .widget-card div::-webkit-scrollbar,
 .widget-card ul::-webkit-scrollbar,
@@ -232,30 +228,29 @@
 .widget-card__surface::-webkit-scrollbar,
 .widget-card__surface *::-webkit-scrollbar,
 .widget-card__surface textarea::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
-  appearance: none !important;
-  -webkit-appearance: none !important;
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
-/* Also hide scrollbar track and thumb */
 .widget-card textarea::-webkit-scrollbar-track,
 .widget-card textarea::-webkit-scrollbar-thumb,
 .widget-card__content *::-webkit-scrollbar-track,
 .widget-card__content *::-webkit-scrollbar-thumb,
 .widget-card__surface *::-webkit-scrollbar-track,
 .widget-card__surface *::-webkit-scrollbar-thumb {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
 }
 
-/* TipTap Editor Styles */
+// TipTap Editor Styles
 .ProseMirror {
-  background: transparent !important;
+  background: transparent;
   outline: none;
   min-height: 100%;
   padding: 1rem;
@@ -298,65 +293,61 @@
   line-height: 1.6;
 }
 
-/* TipTap List Styles - Force list markers to show */
-/* Override Tailwind's list reset */
 .ProseMirror ul,
 .ProseMirror ul[data-type="bulletList"] {
-  margin: 0.5rem 0 !important;
-  padding-left: 0 !important;
-  list-style: none !important;
+  margin: 0.5rem 0;
+  padding-left: 0;
+  list-style: none;
 }
 
 .ProseMirror ul[data-type="taskList"] {
-  list-style: none !important;
-  padding-left: 0 !important;
+  list-style: none;
+  padding-left: 0;
 }
 
 .ProseMirror ol,
 .ProseMirror ol[data-type="orderedList"] {
-  margin: 0.5rem 0 !important;
-  padding-left: 0 !important;
-  list-style: none !important;
-  counter-reset: list-counter !important;
+  margin: 0.5rem 0;
+  padding-left: 0;
+  list-style: none;
+  counter-reset: list-counter;
 }
 
 .ProseMirror li {
-  margin: 0.25rem 0 !important;
-  line-height: 1.6 !important;
-  padding-left: 1.5rem !important;
-  position: relative !important;
+  margin: 0.25rem 0;
+  line-height: 1.6;
+  padding-left: 1.5rem;
+  position: relative;
 }
 
-/* Bullet points using pseudo-elements */
 .ProseMirror ul > li::before {
-  content: "•" !important;
-  position: absolute !important;
-  left: 0 !important;
-  color: var(--foreground) !important;
-  font-weight: bold !important;
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--foreground);
+  font-weight: bold;
 }
 
 .ProseMirror ul[data-type="bulletList"] > li::before {
-  content: "•" !important;
-  position: absolute !important;
-  left: 0 !important;
-  color: var(--foreground) !important;
-  font-weight: bold !important;
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--foreground);
+  font-weight: bold;
 }
 
-/* Numbered lists using counter */
 .ProseMirror ol > li,
 .ProseMirror ol[data-type="orderedList"] > li {
-  counter-increment: list-counter !important;
+  counter-increment: list-counter;
 }
 
 .ProseMirror ol > li::before,
 .ProseMirror ol[data-type="orderedList"] > li::before {
-  content: counter(list-counter) "." !important;
-  position: absolute !important;
-  left: 0 !important;
-  color: var(--foreground) !important;
-  font-weight: normal !important;
+  content: counter(list-counter) ".";
+  position: absolute;
+  left: 0;
+  color: var(--foreground);
+  font-weight: normal;
 }
 
 .ProseMirror blockquote {
@@ -376,38 +367,37 @@
 }
 
 .ProseMirror code {
-  background: var(--muted) !important;
-  padding: 0.125rem 0.25rem !important;
-  border-radius: 0.25rem !important;
-  font-size: 0.875em !important;
-  font-family: var(--font-mono) !important;
-  color: var(--foreground) !important;
+  background: var(--muted);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-family: var(--font-mono);
+  color: var(--foreground);
 }
 
 .ProseMirror pre {
-  background: var(--card) !important;
-  background-color: var(--card) !important;
-  padding: 1rem !important;
-  border-radius: 0.5rem !important;
-  overflow-x: auto !important;
-  margin: 1rem 0 !important;
-  border: 1px solid var(--border) !important;
+  background: var(--card);
+  background-color: var(--card);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  border: 1px solid var(--border);
 }
 
 .ProseMirror pre code {
-  background: transparent !important;
-  padding: 0 !important;
-  color: var(--foreground) !important;
+  background: transparent;
+  padding: 0;
+  color: var(--foreground);
 }
 
-/* Code block styling - ensure distinct background with better contrast */
 .ProseMirror pre[data-type="codeBlock"] {
-  background: var(--card) !important;
-  background-color: var(--card) !important;
-  border: 1px solid var(--border) !important;
+  background: var(--card);
+  background-color: var(--card);
+  border: 1px solid var(--border);
 }
 
 .ProseMirror pre[data-type="codeBlock"] code {
-  background: transparent !important;
-  color: var(--foreground) !important;
+  background: transparent;
+  color: var(--foreground);
 }

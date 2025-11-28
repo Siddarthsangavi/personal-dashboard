@@ -1,77 +1,41 @@
-// FRESH START: Clean implementation of surface styles
-// Key principle: Visual effects ONLY, NO layout/positioning changes
+// Surface Styles - Clean and Simple
 
-// ============================================
-// DEFAULT SURFACE
-// ============================================
+// Default Surface
 .surface--default {
   background: var(--sidebar);
-  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-  box-shadow: none;
-  transition: background 0.3s ease, border-color 0.3s ease;
-}
-
-.surface--default:hover {
-  background: var(--sidebar);
+  border: 2px solid color-mix(in srgb, var(--border) 100%, transparent);
   box-shadow: none;
 }
 
-.dark .surface--default {
+.surface--default.widget-card {
   background: var(--sidebar);
-  border-color: rgba(255, 255, 255, 0.12);
   box-shadow: none;
+  border: 2px solid color-mix(in srgb, var(--border) 100%, transparent);
 }
 
-.dark .surface--default:hover {
-  background: var(--sidebar);
-  box-shadow: none;
-}
-// ============================================
-// GLASSMORPHIC SURFACE
-// ============================================
+// Glassmorphic Surface
 .surface--glass {
   background: var(--sidebar);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
   -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  transition: background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
 }
 
 .surface--glass.widget-card {
-  // Ensure identical layout to default
-  position: relative !important;
-  top: 0 !important;
-  left: 0 !important;
-  transform: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  // Apply glass effect with shadow
-  background: var(--sidebar) !important;
-  backdrop-filter: blur(40px) saturate(200%) brightness(1.1) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1) !important;
+  background: var(--sidebar);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
+  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
-}
-
-.surface--glass:hover {
-  background: var(--sidebar);
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-
-.surface--glass.widget-card:hover {
-  transform: none !important;
-  background: var(--sidebar) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .dark .surface--glass {
-  background: var(--sidebar);
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(40px) saturate(200%) brightness(0.95);
   -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(0.95);
   box-shadow: 
@@ -80,150 +44,55 @@
 }
 
 .dark .surface--glass.widget-card {
-  background: var(--sidebar) !important;
-  backdrop-filter: blur(40px) saturate(200%) brightness(0.95) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(0.95) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(40px) saturate(200%) brightness(0.95);
+  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(0.95);
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.dark .surface--glass:hover {
-  background: var(--sidebar);
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-.dark .surface--glass.widget-card:hover {
-  transform: none !important;
-  background: var(--sidebar) !important;
-}
-
-// ============================================
-// NEUMORPHIC SURFACE
-// ============================================
+// Neumorphic Surface - Strong uniform raised effect on all sides
 .surface--neumorphic {
   background: var(--sidebar);
-  backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
-  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
-  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-  // Classic neumorphic dual shadow effect - prominent 3D look
+  border: 2px solid color-mix(in srgb, var(--border) 100%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   box-shadow: 
-    12px 12px 24px rgba(0, 0, 0, 0.15),
-    -12px -12px 24px rgba(255, 255, 255, 0.8);
-  transition: background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
+    0 0 0 3px rgba(0, 0, 0, 0.2),
+    0 20px 40px 8px rgba(0, 0, 0, 0.25),
+    0 -20px 40px 8px rgba(0, 0, 0, 0.25),
+    20px 0 40px 8px rgba(0, 0, 0, 0.25),
+    -20px 0 40px 8px rgba(0, 0, 0, 0.25);
 }
 
 .surface--neumorphic.widget-card {
-  // Ensure identical layout to default
-  position: relative !important;
-  top: 0 !important;
-  left: 0 !important;
-  transform: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  // Same border as default
-  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent) !important;
-  // Classic neumorphic dual shadow - MUST override any box-shadow: none rules
+  background: var(--sidebar);
+  border: 2px solid color-mix(in srgb, var(--border) 100%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   box-shadow: 
-    12px 12px 24px rgba(0, 0, 0, 0.15),
-    -12px -12px 24px rgba(255, 255, 255, 0.8) !important;
-}
-
-.surface--neumorphic:hover {
-  box-shadow: 
-    14px 14px 28px rgba(0, 0, 0, 0.18),
-    -14px -14px 28px rgba(255, 255, 255, 0.9);
-}
-
-.surface--neumorphic:active {
-  box-shadow: 
-    inset 6px 6px 12px rgba(0, 0, 0, 0.2),
-    inset -6px -6px 12px rgba(255, 255, 255, 0.7);
+    0 0 0 3px rgba(0, 0, 0, 0.2),
+    0 20px 40px 8px rgba(0, 0, 0, 0.25),
+    0 -20px 40px 8px rgba(0, 0, 0, 0.25),
+    20px 0 40px 8px rgba(0, 0, 0, 0.25),
+    -20px 0 40px 8px rgba(0, 0, 0, 0.25);
 }
 
 .dark .surface--neumorphic {
-  background: var(--sidebar);
   box-shadow: 
-    12px 12px 24px rgba(0, 0, 0, 0.6),
-    -12px -12px 24px rgba(255, 255, 255, 0.08);
+    0 0 0 3px rgba(255, 255, 255, 0.2),
+    0 20px 40px 8px rgba(255, 255, 255, 0.2),
+    0 -20px 40px 8px rgba(255, 255, 255, 0.2),
+    20px 0 40px 8px rgba(255, 255, 255, 0.2),
+    -20px 0 40px 8px rgba(255, 255, 255, 0.2);
 }
 
 .dark .surface--neumorphic.widget-card {
   box-shadow: 
-    12px 12px 24px rgba(0, 0, 0, 0.6),
-    -12px -12px 24px rgba(255, 255, 255, 0.08) !important;
+    0 0 0 3px rgba(255, 255, 255, 0.2),
+    0 20px 40px 8px rgba(255, 255, 255, 0.2),
+    0 -20px 40px 8px rgba(255, 255, 255, 0.2),
+    20px 0 40px 8px rgba(255, 255, 255, 0.2),
+    -20px 0 40px 8px rgba(255, 255, 255, 0.2);
 }
-
-.dark .surface--neumorphic:hover {
-  box-shadow: 
-    14px 14px 28px rgba(0, 0, 0, 0.7),
-    -14px -14px 28px rgba(255, 255, 255, 0.1);
-}
-
-.dark .surface--neumorphic:active {
-  box-shadow: 
-    inset 6px 6px 12px rgba(0, 0, 0, 0.8),
-    inset -6px -6px 12px rgba(255, 255, 255, 0.12);
-}
-
-// ============================================
-// COMMON RULES FOR ALL SURFACES
-// ============================================
-// Ensure widget-card__surface maintains position across all modes
-.surface--default.widget-card .widget-card__surface,
-.surface--glass.widget-card .widget-card__surface,
-.surface--neumorphic.widget-card .widget-card__surface {
-  position: relative !important;
-  top: 0 !important;
-  left: 0 !important;
-  transform: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  justify-content: flex-start !important;
-}
-
-// Ensure interactive elements are clickable
-.surface--glass button,
-.surface--glass [role="button"],
-.surface--glass a,
-.surface--neumorphic button,
-.surface--neumorphic [role="button"],
-.surface--neumorphic a {
-  position: relative;
-  z-index: 10 !important;
-  pointer-events: auto !important;
-}
-// Dropdown menu handling
-.surface--glass[data-dropdown-menu="true"],
-.surface--neumorphic[data-dropdown-menu="true"] {
-  overflow: visible !important;
-  pointer-events: auto !important;
-}
-
-.surface--glass[data-dropdown-menu="true"] {
-  backdrop-filter: blur(10px) saturate(150%);
-  -webkit-backdrop-filter: blur(10px) saturate(150%);
-}
-
-.surface--glass[data-dropdown-menu="true"] > *,
-.surface--neumorphic[data-dropdown-menu="true"] > * {
-  position: relative;
-  z-index: 10;
-  pointer-events: auto !important;
-}
-
-.surface--glass[data-dropdown-menu="true"] button,
-.surface--glass[data-dropdown-menu="true"] [role="button"],
-.surface--neumorphic[data-dropdown-menu="true"] button,
-.surface--neumorphic[data-dropdown-menu="true"] [role="button"] {
-  position: relative !important;
-  z-index: 999 !important;
-  pointer-events: auto !important;
-}
-
-
