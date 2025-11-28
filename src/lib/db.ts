@@ -48,6 +48,53 @@ export interface SettingRecord {
   updatedAt: string;
 }
 
+export interface DataLibraryCategoryRecord {
+  id: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DataLibraryItemType = "text" | "credential" | "url" | "database" | "api-key" | "other";
+
+export interface DataLibraryItemRecord {
+  id: number;
+  categoryId: number;
+  name: string;
+  value: string;
+  tags: string[];
+  type?: DataLibraryItemType; // Optional for backward compatibility
+  isSensitive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Notion-like data library types
+export type BlockType = "paragraph" | "heading1" | "heading2" | "heading3" | "bulleted-list" | "numbered-list" | "to-do" | "toggle" | "quote" | "divider" | "credential";
+
+export interface PageRecord {
+  id: number;
+  title: string;
+  content?: string; // Store the entire page content as plain text (optional for backward compatibility)
+  parentId: number | null; // For nested pages
+  icon?: string;
+  order?: number; // For ordering pages within the same parent (optional for backward compatibility)
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotionBlockRecord {
+  id: number;
+  pageId: number;
+  type: BlockType;
+  content: string;
+  order: number; // For ordering blocks
+  parentId: number | null; // For nested blocks (e.g., toggle children)
+  properties?: Record<string, unknown>; // For additional properties (e.g., checked for to-do)
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface DashboardDB extends DBSchema {
   widgets: {
     key: number;
@@ -78,10 +125,29 @@ interface DashboardDB extends DBSchema {
     key: string;
     value: SettingRecord;
   };
+  dataLibraryCategories: {
+    key: number;
+    value: DataLibraryCategoryRecord;
+  };
+  dataLibraryItems: {
+    key: number;
+    value: DataLibraryItemRecord;
+    indexes: { categoryId: number };
+  };
+  notionPages: {
+    key: number;
+    value: PageRecord;
+    indexes: { parentId: number | null };
+  };
+  notionBlocks: {
+    key: number;
+    value: NotionBlockRecord;
+    indexes: { pageId: number; parentId: number | null };
+  };
 }
 
 const DB_NAME = "personalised-dashboard";
-const DB_VERSION = 3;
+const DB_VERSION = 6;
 
 let dbPromise: Promise<IDBPDatabase<DashboardDB>> | null = null;
 
@@ -139,6 +205,21 @@ const ensureDb = async () => {
           db.createObjectStore("settings", { keyPath: "key" });
         }
 
+        if (!db.objectStoreNames.contains("dataLibraryCategories")) {
+          db.createObjectStore("dataLibraryCategories", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+        }
+
+        if (!db.objectStoreNames.contains("dataLibraryItems")) {
+          const itemsStore = db.createObjectStore("dataLibraryItems", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          itemsStore.createIndex("categoryId", "categoryId", { unique: false });
+        }
+
         if (oldVersion < 2) {
           const updateIndexes = (storeName: keyof DashboardDB) => {
             try {
@@ -176,6 +257,45 @@ const ensureDb = async () => {
             });
             scratchpadStore.createIndex("widgetId", "widgetId", { unique: false });
           }
+        }
+
+        if (oldVersion < 4) {
+          if (!db.objectStoreNames.contains("dataLibraryCategories")) {
+            db.createObjectStore("dataLibraryCategories", {
+              keyPath: "id",
+              autoIncrement: true,
+            });
+          }
+          if (!db.objectStoreNames.contains("dataLibraryItems")) {
+            const itemsStore = db.createObjectStore("dataLibraryItems", {
+              keyPath: "id",
+              autoIncrement: true,
+            });
+            itemsStore.createIndex("categoryId", "categoryId", { unique: false });
+          }
+        }
+
+        if (oldVersion < 5) {
+          if (!db.objectStoreNames.contains("notionPages")) {
+            const pagesStore = db.createObjectStore("notionPages", {
+              keyPath: "id",
+              autoIncrement: true,
+            });
+            pagesStore.createIndex("parentId", "parentId", { unique: false });
+          }
+          if (!db.objectStoreNames.contains("notionBlocks")) {
+            const blocksStore = db.createObjectStore("notionBlocks", {
+              keyPath: "id",
+              autoIncrement: true,
+            });
+            blocksStore.createIndex("pageId", "pageId", { unique: false });
+            blocksStore.createIndex("parentId", "parentId", { unique: false });
+          }
+        }
+
+        if (oldVersion < 6) {
+          // Migration: Order field will be added lazily when pages are first accessed
+          // This is handled in the list() function
         }
       },
     });
@@ -346,5 +466,239 @@ export const settingsRepository = {
         updatedAt: timestamp(),
       })
     );
+  },
+};
+
+// Page repositories
+export const pageRepository = {
+  async list(parentId: number | null = null): Promise<PageRecord[]> {
+    if (!isBrowser) return [];
+    return withDb(async (db) => {
+      let pages: NotionPageRecord[];
+      if (parentId === null) {
+        // For null parentId, get all pages and filter
+        const allPages = await db.getAll("notionPages");
+        pages = allPages.filter((page) => page.parentId === null);
+      } else {
+        const index = db.transaction("notionPages", "readonly").store.index("parentId");
+        pages = await index.getAll(parentId);
+      }
+      
+      // Lazy migration: If any page is missing order, assign it based on id
+      const needsMigration = pages.some(page => page.order === undefined);
+      if (needsMigration) {
+        // Sort by id (creation order) and assign order values
+        pages.sort((a, b) => a.id - b.id);
+        const writeTransaction = db.transaction("notionPages", "readwrite");
+        const writeStore = writeTransaction.objectStore("notionPages");
+        
+        for (let i = 0; i < pages.length; i++) {
+          const page = pages[i];
+          if (page.order === undefined) {
+            await writeStore.put({ ...page, order: i });
+            pages[i] = { ...page, order: i };
+          }
+        }
+      }
+      
+      // Sort by order (if available), then by id as fallback
+      return pages.sort((a, b) => {
+        const orderA = a.order ?? a.id;
+        const orderB = b.order ?? b.id;
+        return orderA - orderB;
+      });
+    });
+  },
+  async get(id: number): Promise<PageRecord | null> {
+    if (!isBrowser) return null;
+    return withDb((db) => db.get("notionPages", id));
+  },
+  async create(payload: Omit<PageRecord, "id" | "createdAt" | "updatedAt">): Promise<PageRecord | null> {
+    if (!isBrowser) return null;
+    const now = timestamp();
+    
+    // Ensure title is not empty - use default if empty
+    const title = payload.title?.trim() || "Untitled";
+    
+    // If order is not provided, set it to the end of the list for the same parent
+    let order = payload.order;
+    if (order === undefined) {
+      const siblings = await this.list(payload.parentId);
+      order = siblings.length > 0 ? Math.max(...siblings.map(p => p.order ?? p.id)) + 1 : 0;
+    }
+    
+    const record: Omit<PageRecord, "id"> = {
+      ...payload,
+      title,
+      order,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const id = await withDb((db) => db.add("notionPages", record));
+    if (!id) return null;
+    return { ...(record as PageRecord), id: Number(id) };
+  },
+  async update(id: number, updates: Partial<PageRecord>): Promise<PageRecord | null> {
+    if (!isBrowser) return null;
+    const existing = await withDb((db) => db.get("notionPages", id));
+    if (!existing) return null;
+    
+    // Ensure title is not empty if it's being updated
+    const finalUpdates = { ...updates };
+    if (finalUpdates.title !== undefined) {
+      finalUpdates.title = finalUpdates.title.trim() || "Untitled";
+    }
+    
+    const updated: PageRecord = {
+      ...existing,
+      ...finalUpdates,
+      updatedAt: timestamp(),
+    };
+    await withDb((db) => db.put("notionPages", updated));
+    return updated;
+  },
+  async remove(id: number): Promise<void> {
+    if (!isBrowser) return;
+    // Cascade delete: remove all blocks and child pages
+    const blocks = await notionBlockRepository.listByPage(id);
+    await Promise.all(blocks.map((block) => notionBlockRepository.remove(block.id)));
+    const children = await this.list(id);
+    await Promise.all(children.map((child) => this.remove(child.id)));
+    await withDb((db) => db.delete("notionPages", id));
+  },
+};
+
+export const notionBlockRepository = {
+  async listByPage(pageId: number, parentId: number | null = null): Promise<NotionBlockRecord[]> {
+    if (!isBrowser) return [];
+    return withDb(async (db) => {
+      const pageIndex = db.transaction("notionBlocks", "readonly").store.index("pageId");
+      const allBlocks = await pageIndex.getAll(pageId);
+      const filtered = allBlocks.filter((block) => block.parentId === parentId);
+      return filtered.sort((a, b) => a.order - b.order);
+    });
+  },
+  async get(id: number): Promise<NotionBlockRecord | null> {
+    if (!isBrowser) return null;
+    return withDb((db) => db.get("notionBlocks", id));
+  },
+  async create(payload: Omit<NotionBlockRecord, "id" | "createdAt" | "updatedAt">): Promise<NotionBlockRecord | null> {
+    if (!isBrowser) return null;
+    const now = timestamp();
+    const record: Omit<NotionBlockRecord, "id"> = {
+      ...payload,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const id = await withDb((db) => db.add("notionBlocks", record));
+    if (!id) return null;
+    return { ...(record as NotionBlockRecord), id: Number(id) };
+  },
+  async update(id: number, updates: Partial<NotionBlockRecord>): Promise<NotionBlockRecord | null> {
+    if (!isBrowser) return null;
+    const existing = await withDb((db) => db.get("notionBlocks", id));
+    if (!existing) return null;
+    const updated: NotionBlockRecord = {
+      ...existing,
+      ...updates,
+      updatedAt: timestamp(),
+    };
+    await withDb((db) => db.put("notionBlocks", updated));
+    return updated;
+  },
+  async remove(id: number): Promise<void> {
+    if (!isBrowser) return;
+    // Cascade delete: remove all child blocks
+    await withDb(async (db) => {
+      const allBlocks = await db.getAll("notionBlocks");
+      const children = allBlocks.filter((block) => block.parentId === id);
+      await Promise.all(children.map((child) => this.remove(child.id)));
+    });
+    await withDb((db) => db.delete("notionBlocks", id));
+  },
+  async reorder(pageId: number, blockIds: number[]): Promise<void> {
+    if (!isBrowser) return;
+    await withDb(async (db) => {
+      const tx = db.transaction("notionBlocks", "readwrite");
+      for (let i = 0; i < blockIds.length; i++) {
+        const block = await tx.store.get(blockIds[i]);
+        if (block && block.pageId === pageId) {
+          await tx.store.put({ ...block, order: i, updatedAt: timestamp() });
+        }
+      }
+      await tx.done;
+    });
+  },
+};
+
+export const dataLibraryCategoryRepository = {
+  async list(): Promise<DataLibraryCategoryRecord[]> {
+    if (!isBrowser) return [];
+    return withDb((db) => db.getAll("dataLibraryCategories"));
+  },
+  async create(payload: Omit<DataLibraryCategoryRecord, "id" | "createdAt" | "updatedAt">) {
+    if (!isBrowser) return null;
+    const now = timestamp();
+    const record = { ...payload, createdAt: now, updatedAt: now };
+    const id = await withDb((db) => db.add("dataLibraryCategories", record));
+    return { ...(record as DataLibraryCategoryRecord), id: Number(id) };
+  },
+  async update(id: number, updates: Partial<DataLibraryCategoryRecord>) {
+    if (!isBrowser) return null;
+    const existing = await withDb((db) => db.get("dataLibraryCategories", id));
+    if (!existing) return null;
+    const updated = {
+      ...existing,
+      ...updates,
+      updatedAt: timestamp(),
+    };
+    await withDb((db) => db.put("dataLibraryCategories", updated));
+    return updated;
+  },
+  async remove(id: number) {
+    if (!isBrowser) return;
+    await withDb((db) => db.delete("dataLibraryCategories", id));
+    // Cascade delete items
+    const items = await dataLibraryItemRepository.listByCategory(id);
+    await Promise.all(items.map((item) => dataLibraryItemRepository.remove(item.id)));
+  },
+};
+
+export const dataLibraryItemRepository = {
+  async listByCategory(categoryId: number): Promise<DataLibraryItemRecord[]> {
+    if (!isBrowser) return [];
+    return withDb(async (db) => {
+      const index = db
+        .transaction("dataLibraryItems", "readonly")
+        .store.index("categoryId");
+      return index.getAll(categoryId);
+    });
+  },
+  async list(): Promise<DataLibraryItemRecord[]> {
+    if (!isBrowser) return [];
+    return withDb((db) => db.getAll("dataLibraryItems"));
+  },
+  async create(payload: Omit<DataLibraryItemRecord, "id" | "createdAt" | "updatedAt">) {
+    if (!isBrowser) return null;
+    const now = timestamp();
+    const record = { ...payload, createdAt: now, updatedAt: now };
+    const id = await withDb((db) => db.add("dataLibraryItems", record));
+    return { ...(record as DataLibraryItemRecord), id: Number(id) };
+  },
+  async update(id: number, updates: Partial<DataLibraryItemRecord>) {
+    if (!isBrowser) return null;
+    const existing = await withDb((db) => db.get("dataLibraryItems", id));
+    if (!existing) return null;
+    const updated = {
+      ...existing,
+      ...updates,
+      updatedAt: timestamp(),
+    };
+    await withDb((db) => db.put("dataLibraryItems", updated));
+    return updated;
+  },
+  async remove(id: number) {
+    if (!isBrowser) return;
+    await withDb((db) => db.delete("dataLibraryItems", id));
   },
 };

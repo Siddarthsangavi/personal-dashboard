@@ -67,7 +67,7 @@ export function WidgetFrame({
               style={style}
               onContextMenu={handleContextMenu}
             >
-              <div className="widget-card__surface h-full flex flex-col">
+              <div className="widget-card__surface flex flex-col">
                 {!hideTitleBar && (
                 <header className={cn("widget-card__chrome")}>
                   <div className={cn("flex items-center gap-2", hideTitleBar ? "w-full justify-end" : "flex-1")}>

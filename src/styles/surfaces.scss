@@ -5,20 +5,32 @@
 // DEFAULT SURFACE
 // ============================================
 .surface--default {
-  background: var(--card);
+  background: var(--sidebar);
   border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
   box-shadow: none;
   transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .surface--default:hover {
+  background: var(--sidebar);
+  box-shadow: none;
+}
+
+.dark .surface--default {
+  background: var(--sidebar);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+.dark .surface--default:hover {
+  background: var(--sidebar);
   box-shadow: none;
 }
 // ============================================
 // GLASSMORPHIC SURFACE
 // ============================================
 .surface--glass {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--sidebar);
   border: 1px solid rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
   -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
@@ -37,7 +49,7 @@
   margin: 0 !important;
   padding: 0 !important;
   // Apply glass effect with shadow
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: var(--sidebar) !important;
   backdrop-filter: blur(40px) saturate(200%) brightness(1.1) !important;
   -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1) !important;
   box-shadow: 
@@ -46,7 +58,7 @@
 }
 
 .surface--glass:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--sidebar);
   box-shadow: 
     0 12px 40px rgba(0, 0, 0, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -54,11 +66,11 @@
 
 .surface--glass.widget-card:hover {
   transform: none !important;
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: var(--sidebar) !important;
 }
 
 .dark .surface--glass {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--sidebar);
   border-color: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(40px) saturate(200%) brightness(0.95);
   -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(0.95);
@@ -68,7 +80,7 @@
 }
 
 .dark .surface--glass.widget-card {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: var(--sidebar) !important;
   backdrop-filter: blur(40px) saturate(200%) brightness(0.95) !important;
   -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(0.95) !important;
   box-shadow: 
@@ -77,7 +89,7 @@
 }
 
 .dark .surface--glass:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--sidebar);
   box-shadow: 
     0 12px 40px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
@@ -85,20 +97,22 @@
 
 .dark .surface--glass.widget-card:hover {
   transform: none !important;
-  background: rgba(255, 255, 255, 0.12) !important;
+  background: var(--sidebar) !important;
 }
 
 // ============================================
 // NEUMORPHIC SURFACE
 // ============================================
 .surface--neumorphic {
-  background: var(--card);
+  background: var(--sidebar);
+  backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
+  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
   border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
   // Classic neumorphic dual shadow effect - prominent 3D look
   box-shadow: 
     12px 12px 24px rgba(0, 0, 0, 0.15),
     -12px -12px 24px rgba(255, 255, 255, 0.8);
-  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
 }
 
 .surface--neumorphic.widget-card {
@@ -130,7 +144,7 @@
 }
 
 .dark .surface--neumorphic {
-  background: var(--card);
+  background: var(--sidebar);
   box-shadow: 
     12px 12px 24px rgba(0, 0, 0, 0.6),
     -12px -12px 24px rgba(255, 255, 255, 0.08);

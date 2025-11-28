@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Dashboard from "@/components/dashboard";
+import { AppShell } from "@/components/app-shell";
 
 function MobileMessage() {
   return (
@@ -54,7 +54,7 @@ export default function Home() {
   if (!isMounted) {
     return (
       <main className="min-h-screen">
-        <Dashboard />
+        <AppShell />
       </main>
     );
   }
@@ -65,7 +65,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
-      <Dashboard />
+      <AppShell />
     </main>
   );
 }

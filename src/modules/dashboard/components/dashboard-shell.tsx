@@ -8,17 +8,11 @@ import { EmptyState } from "./empty-state";
 import { WidgetPicker } from "./widget-picker";
 import { PageNavigation } from "./page-navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useKeyboardShortcuts } from "../hooks/use-keyboard-shortcuts";
-import { KeyboardShortcutsModal } from "./keyboard-shortcuts-modal";
-
 export function DashboardShell() {
   const hydrate = useDashboardStore((state) => state.hydrate);
   const loading = useDashboardStore((state) => state.loading);
   const widgets = useDashboardStore((state) => state.widgets);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-
-  useKeyboardShortcuts(() => setShortcutsOpen(true));
 
   useEffect(() => {
     void hydrate();
@@ -34,7 +28,6 @@ export function DashboardShell() {
       <div className="flex-shrink-0 space-y-3 p-4 relative z-0">
         <DashboardToolbar
           onAdd={() => setPickerOpen(true)}
-          onShowShortcuts={() => setShortcutsOpen(true)}
         />
         {hasWidgets && <PageNavigation />}
       </div>
@@ -59,7 +52,6 @@ export function DashboardShell() {
       </div>
 
       <WidgetPicker open={pickerOpen} onOpenChange={setPickerOpen} />
-      <KeyboardShortcutsModal open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </div>
   );
 }

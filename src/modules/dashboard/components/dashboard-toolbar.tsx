@@ -1,19 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { SquareStack, Keyboard } from "lucide-react";
+import { SquareStack } from "lucide-react";
 import { useDashboardStore } from "../store/dashboard-store";
-import { AppearanceMenu } from "./appearance-menu";
 import { WidgetStats } from "./widget-stats";
 import { cn } from "@/lib/utils";
 
 interface DashboardToolbarProps {
   onAdd: () => void;
-  onShowShortcuts?: () => void;
 }
 
-export function DashboardToolbar({ onAdd, onShowShortcuts }: DashboardToolbarProps) {
-  const widgets = useDashboardStore((state) => state.widgets);
+export function DashboardToolbar({ onAdd }: DashboardToolbarProps) {
   const surface = useDashboardStore((state) => state.surfaceStyle);
 
   return (
@@ -24,25 +21,13 @@ export function DashboardToolbar({ onAdd, onShowShortcuts }: DashboardToolbarPro
       surface === "default" && "border border-border/70 bg-card"
     )}>
       <div className="flex items-center gap-3">
-        <Button onClick={onAdd} size="sm" className="gap-2 rounded-xl">
-          <SquareStack className="size-4" />
-          {widgets.length ? "Add more" : "Add widgets"}
-        </Button>
         <WidgetStats />
       </div>
       <div className="flex items-center justify-end gap-3">
-        {onShowShortcuts && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onShowShortcuts}
-            className="gap-2 rounded-xl"
-            title="Keyboard shortcuts (⌘K)"
-          >
-            <Keyboard className="size-4" />
-          </Button>
-        )}
-        <AppearanceMenu />
+        <Button onClick={onAdd} size="sm" className="gap-2 rounded-xl">
+          <SquareStack className="size-4" />
+          Add Widget
+        </Button>
       </div>
     </div>
   );
