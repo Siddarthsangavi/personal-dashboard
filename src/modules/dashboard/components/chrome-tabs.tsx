@@ -120,6 +120,22 @@ export function ChromeTabs() {
           const isFirst = index === 0;
           const isLast = index === tabs.length - 1;
           
+          // Determine border radius based on position
+          const getBorderRadius = () => {
+            if (isFirst && isLast) {
+              // Only one tab: round both top corners
+              return "rounded-tl-lg rounded-tr-lg";
+            } else if (isFirst) {
+              // First tab (with more tabs): only round top-left, explicitly set top-right to 0
+              return "rounded-tl-lg rounded-tr-[0px]";
+            } else if (isLast) {
+              // Last tab (but not first): only round top-right, explicitly set top-left to 0
+              return "rounded-tr-lg rounded-tl-[0px]";
+            }
+            // Middle tabs: explicitly no rounding
+            return "rounded-tl-[0px] rounded-tr-[0px]";
+          };
+
           return (
             <div
               key={tab.id}
@@ -129,13 +145,13 @@ export function ChromeTabs() {
                 "bg-muted/50",
                 isActive && "bg-background border-b-0 z-10 mb-[-1px]",
                 !isActive && "border-b border-border/50",
-                isFirst && "rounded-tl-lg",
-                isLast && !isActive && "rounded-tr-lg",
+                getBorderRadius(),
                 !isFirst && "-ml-px", // Overlap borders
                 "group cursor-pointer transition-colors",
                 !isActive && "hover:bg-muted"
               )}
               onClick={() => handleTabClick(tab.id)}
+              onDoubleClick={() => handleStartEdit(tab.id)}
               onContextMenu={(e) => handleContextMenu(e, tab.id)}
             >
             {isEditing ? (
@@ -161,9 +177,11 @@ export function ChromeTabs() {
       <button
         onClick={handleCreateTab}
         className={cn(
-          "px-2 py-1.5 rounded-tr-lg border-t border-r border-border/50",
+          "px-2 py-1.5 border-t border-r border-border/50",
           "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground",
-          "transition-colors"
+          "transition-colors",
+          "rounded-tr-lg rounded-tl-[0px]", // Only round top-right, explicitly no top-left
+          tabs.length > 0 && "-ml-px" // Overlap with last tab if tabs exist
         )}
         title="New tab"
       >

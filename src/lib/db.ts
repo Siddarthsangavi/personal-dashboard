@@ -375,7 +375,7 @@ export const widgetRepository = {
       updatedAt: now,
     };
 
-    const id = await withDb((db) => db.add("widgets", record));
+    const id = await withDb((db) => db.add("widgets", record as unknown as WidgetRecord));
     if (!id) return null;
     return { ...(record as WidgetRecord), id: Number(id) };
   },
@@ -439,8 +439,9 @@ const buildCrud = <T extends { id: number; widgetId: number }>(
       if (!isBrowser) return null;
       const now = timestamp();
       const record = { ...payload, createdAt: now, updatedAt: now };
-      const id = await withDb((db) => db.add(storeName, record));
-      return { ...(record as T), id: Number(id) };
+      type RecordUnion = TodoRecord | NoteRecord | QuickLinkRecord | ScratchpadRecord;
+      const id = await withDb((db) => db.add(storeName, record as unknown as RecordUnion));
+      return { ...(record as unknown as T), id: Number(id) };
     },
     async update(id: number, updates: Partial<T>) {
       if (!isBrowser) return null;
@@ -452,7 +453,7 @@ const buildCrud = <T extends { id: number; widgetId: number }>(
         updatedAt: timestamp(),
       };
       await withDb((db) => db.put(storeName, updated));
-      return updated as T;
+      return updated as unknown as T;
     },
     async remove(id: number) {
       if (!isBrowser) return;
@@ -534,7 +535,7 @@ export const pageRepository = {
   },
   async get(id: number): Promise<PageRecord | null> {
     if (!isBrowser) return null;
-    return withDb((db) => db.get("notionPages", id));
+    return (await withDb((db) => db.get("notionPages", id))) ?? null;
   },
   async create(payload: Omit<PageRecord, "id" | "createdAt" | "updatedAt">): Promise<PageRecord | null> {
     if (!isBrowser) return null;
@@ -557,7 +558,7 @@ export const pageRepository = {
       createdAt: now,
       updatedAt: now,
     };
-    const id = await withDb((db) => db.add("notionPages", record));
+    const id = await withDb((db) => db.add("notionPages", record as unknown as PageRecord));
     if (!id) return null;
     return { ...(record as PageRecord), id: Number(id) };
   },
@@ -603,7 +604,7 @@ export const notionBlockRepository = {
   },
   async get(id: number): Promise<NotionBlockRecord | null> {
     if (!isBrowser) return null;
-    return withDb((db) => db.get("notionBlocks", id));
+    return (await withDb((db) => db.get("notionBlocks", id))) ?? null;
   },
   async create(payload: Omit<NotionBlockRecord, "id" | "createdAt" | "updatedAt">): Promise<NotionBlockRecord | null> {
     if (!isBrowser) return null;
@@ -613,7 +614,7 @@ export const notionBlockRepository = {
       createdAt: now,
       updatedAt: now,
     };
-    const id = await withDb((db) => db.add("notionBlocks", record));
+    const id = await withDb((db) => db.add("notionBlocks", record as unknown as NotionBlockRecord));
     if (!id) return null;
     return { ...(record as NotionBlockRecord), id: Number(id) };
   },
@@ -663,7 +664,7 @@ export const dataLibraryCategoryRepository = {
     if (!isBrowser) return null;
     const now = timestamp();
     const record = { ...payload, createdAt: now, updatedAt: now };
-    const id = await withDb((db) => db.add("dataLibraryCategories", record));
+    const id = await withDb((db) => db.add("dataLibraryCategories", record as unknown as DataLibraryCategoryRecord));
     return { ...(record as DataLibraryCategoryRecord), id: Number(id) };
   },
   async update(id: number, updates: Partial<DataLibraryCategoryRecord>) {
@@ -705,7 +706,7 @@ export const dataLibraryItemRepository = {
     if (!isBrowser) return null;
     const now = timestamp();
     const record = { ...payload, createdAt: now, updatedAt: now };
-    const id = await withDb((db) => db.add("dataLibraryItems", record));
+    const id = await withDb((db) => db.add("dataLibraryItems", record as unknown as DataLibraryItemRecord));
     return { ...(record as DataLibraryItemRecord), id: Number(id) };
   },
   async update(id: number, updates: Partial<DataLibraryItemRecord>) {
@@ -746,7 +747,7 @@ export const tabRepository = {
       createdAt: now,
       updatedAt: now,
     };
-    const id = await withDb((db) => db.add("tabs", record));
+    const id = await withDb((db) => db.add("tabs", record as unknown as TabRecord));
     if (!id) return null;
     return { ...(record as TabRecord), id: Number(id) };
   },
@@ -768,6 +769,6 @@ export const tabRepository = {
   },
   async get(id: number): Promise<TabRecord | null> {
     if (!isBrowser) return null;
-    return withDb((db) => db.get("tabs", id));
+    return (await withDb((db) => db.get("tabs", id))) ?? null;
   },
 };
