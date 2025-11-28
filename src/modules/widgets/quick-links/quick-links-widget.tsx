@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import {
   Plus,
   Search,
-  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -283,25 +282,6 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
                 aria-label={`Open ${link.label}`}
               >
                 <Icon icon={link.icon} width={36} height={36} />
-              </button>
-              <button
-                className={styles.deleteButton}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  confirmDelete(link);
-                }}
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }}
-                aria-label={`Delete ${link.label}`}
-              >
-                <X className="size-3" />
               </button>
             </div>
           ))}

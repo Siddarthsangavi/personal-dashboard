@@ -93,36 +93,7 @@
   z-index: 1;
 }
 
-.deleteButton {
-  position: absolute;
-  top: 0.125rem;
-  right: 0.125rem;
-  width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--destructive);
-  border: none;
-  color: var(--destructive-foreground);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
-  pointer-events: auto !important;
-  touch-action: auto !important;
-  z-index: 2;
-  padding: 0;
-}
-
-.linkTile:hover .deleteButton {
-  opacity: 1;
-}
-
-.deleteButton:hover {
-  transform: scale(1.15);
-  background: color-mix(in oklab, var(--destructive) 90%, black);
-}
+/* Delete button removed - use right-click context menu instead */
 
 .addTile {
   border-style: dashed;

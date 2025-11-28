@@ -135,9 +135,23 @@
   box-shadow: none !important;
 }
 
-.widget-card:focus-within {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
+/* Removed focus-within outline for widget cards - inputs handle their own focus states */
+.widget-card:focus-within,
+.widget-card:focus,
+.widget-card:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove focus outline from react-grid-layout items and their wrappers */
+.react-grid-item:focus-within,
+.react-grid-item:focus,
+.react-grid-item:focus-visible,
+div[data-widget-type]:focus-within,
+div[data-widget-type]:focus,
+div[data-widget-type]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .widget-card > * {
@@ -288,7 +302,7 @@
   position: relative !important;
   flex: 1 1 0 !important;
   padding: 1rem !important; // CRITICAL: Force consistent padding across all modes
-  overflow: hidden;
+  overflow: hidden; // Keep hidden for border-radius clipping
   z-index: 1;
   min-height: 0;
   max-height: 100%;

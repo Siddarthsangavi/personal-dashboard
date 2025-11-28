@@ -117,7 +117,34 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  
+  /* Remove outline and ring from all inputs and textareas by default */
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    ring-width: 0 !important;
+  }
+  
+  /* Remove focus outline from widget cards and their containers when inputs inside are focused */
+  .widget-card:focus-within,
+  .widget-card:focus,
+  .widget-card:focus-visible,
+  [class*="react-grid-item"]:focus-within,
+  [class*="react-grid-item"]:focus,
+  [class*="react-grid-item"]:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Also remove from any div that contains a widget-card */
+  div:has(.widget-card):focus-within,
+  div:has(.widget-card):focus,
+  div:has(.widget-card):focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
   }
   body {
     @apply bg-background text-foreground;

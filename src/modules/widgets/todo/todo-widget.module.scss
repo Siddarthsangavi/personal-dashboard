@@ -27,20 +27,32 @@
   gap: 0.5rem;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 0.25rem;
+  padding: 3px 0.5rem 0 0; /* Add top padding to prevent border clipping on hover (translateY -1px) */
   flex: 1 1 0;
   min-height: 0;
   max-height: 100%;
   position: relative;
   flex-shrink: 1;
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* IE and Edge */
+  /* Show scrollbar when content overflows */
+  scrollbar-width: thin; /* Firefox - show thin scrollbar */
+  -ms-overflow-style: auto; /* IE and Edge - show scrollbar */
 }
 
 .todoList::-webkit-scrollbar {
-  display: none !important; /* Chrome, Safari, Opera */
-  width: 0 !important;
-  height: 0 !important;
+  width: 6px; /* Chrome, Safari, Opera - show thin scrollbar */
+}
+
+.todoList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.todoList::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklab, var(--foreground) 20%, transparent);
+  border-radius: 3px;
+}
+
+.todoList::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in oklab, var(--foreground) 30%, transparent);
 }
 
 .todoCard {
@@ -57,6 +69,8 @@
   border: 1px solid color-mix(in oklab, var(--foreground) 6%, transparent);
   transition: border-color 0.2s ease, transform 0.2s ease, opacity 0.3s ease, max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease;
   overflow: hidden;
+  flex-shrink: 0; /* Prevent todo items from shrinking */
+  min-height: fit-content; /* Ensure items maintain their natural height */
 }
 
 .todoCard.removing {

@@ -20,7 +20,7 @@
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1rem;
   overflow-y: auto;
-  padding-right: 0.25rem;
+  padding: 4px 0.25rem 0 0; /* Add top padding to prevent border clipping on hover (translateY -2px) */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }

@@ -82,8 +82,10 @@ export function WidgetContextMenu({
     </div>
   );
 
-  return typeof window !== "undefined"
-    ? createPortal(menuContent, document.body)
-    : null;
+  if (typeof window === "undefined" || !document.body) {
+    return null;
+  }
+
+  return createPortal(menuContent, document.body);
 }
 

@@ -175,7 +175,7 @@ export function ChromeTabs({ context = "productivity" }: ChromeTabsProps) {
       </button>
 
       {/* Context Menu */}
-      {contextMenu && typeof window !== "undefined" && createPortal(
+      {contextMenu && typeof window !== "undefined" && document.body && createPortal(
         <div
           ref={contextMenuRef}
           className="fixed z-[9999] w-48 rounded-xl border border-border/70 bg-card p-2 shadow-2xl"

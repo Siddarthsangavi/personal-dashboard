@@ -86,7 +86,7 @@ export function WidgetMenu({ widgetId, widgetTitle, onDelete }: WidgetMenuProps)
       >
         <MoreVertical className="size-4" />
       </button>
-      {typeof window !== 'undefined' && menuContent && createPortal(menuContent, document.body)}
+      {typeof window !== 'undefined' && document.body && menuContent && createPortal(menuContent, document.body)}
     </>
   );
 }
