@@ -58,22 +58,10 @@ export function DashboardShell() {
               />
             ))}
           </div>
+        ) : hasWidgets ? (
+          <WidgetBoard />
         ) : (
-          <>
-            {/* Debug info - remove after fixing */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mb-2 text-xs text-muted-foreground">
-                Debug: currentTabId={currentTabId?.toString() || 'null'}, 
-                allWidgets={allWidgets.length}, 
-                tabWidgets={widgets.length}
-              </div>
-            )}
-            {hasWidgets ? (
-              <WidgetBoard />
-            ) : (
-              <EmptyState onAdd={() => setPickerOpen(true)} />
-            )}
-          </>
+          <EmptyState onAdd={() => setPickerOpen(true)} />
         )}
       </div>
 

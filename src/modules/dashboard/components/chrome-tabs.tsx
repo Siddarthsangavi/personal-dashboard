@@ -112,48 +112,53 @@ export function ChromeTabs() {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <TabsList className="w-fit">
-        {tabs.map((tab) => {
-          const isActive = tab.id === currentTabId;
-          const isEditing = editingTabId === tab.id;
-          
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              data-state={isActive ? "active" : "inactive"}
-              onClick={() => handleTabClick(tab.id)}
-              onDoubleClick={() => handleStartEdit(tab.id)}
-              onContextMenu={(e) => handleContextMenu(e, tab.id)}
-              className={cn(
-                "inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50",
-                "data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground data-[state=active]:shadow-sm",
-                "relative"
-              )}
-            >
-              {isEditing ? (
-                <Input
-                  ref={inputRef}
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onBlur={handleSaveEdit}
-                  onKeyDown={handleKeyDown}
-                  className="h-6 text-xs font-medium px-1.5 py-0.5 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 min-w-[80px]"
-                  onClick={(e) => e.stopPropagation()}
-                  onContextMenu={(e) => e.preventDefault()}
-                />
-              ) : (
-                <span className="truncate">{tab.name}</span>
-              )}
-            </button>
-          );
-        })}
-      </TabsList>
+    <div className="flex items-center gap-2 relative">
+      <div className="flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <TabsList className="w-fit flex-shrink-0">
+          {tabs.map((tab) => {
+            const isActive = tab.id === currentTabId;
+            const isEditing = editingTabId === tab.id;
+            
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                data-state={isActive ? "active" : "inactive"}
+                onClick={() => handleTabClick(tab.id)}
+                onDoubleClick={() => handleStartEdit(tab.id)}
+                onContextMenu={(e) => handleContextMenu(e, tab.id)}
+                className={cn(
+                  "inline-flex h-[calc(100%-1px)] items-center justify-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow,background,border-color] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50",
+                  isActive 
+                    ? "bg-background dark:text-foreground border border-input dark:border-input text-foreground shadow-sm"
+                    : "bg-background/50 text-muted-foreground border border-border/30 hover:bg-background/70 hover:text-foreground",
+                  "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring",
+                  "relative w-[120px] min-w-[120px] max-w-[120px] flex-shrink-0"
+                )}
+              >
+                {isEditing ? (
+                  <Input
+                    ref={inputRef}
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={handleSaveEdit}
+                    onKeyDown={handleKeyDown}
+                    className="h-6 text-xs font-medium px-1.5 py-0.5 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 w-full"
+                    onClick={(e) => e.stopPropagation()}
+                    onContextMenu={(e) => e.preventDefault()}
+                  />
+                ) : (
+                  <span className="truncate w-full text-center">{tab.name}</span>
+                )}
+              </button>
+            );
+          })}
+        </TabsList>
+      </div>
       
       <button
         onClick={handleCreateTab}
-        className="inline-flex items-center justify-center rounded-md px-2 py-1 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        className="inline-flex items-center justify-center rounded-md px-2 py-1 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors flex-shrink-0"
         title="New tab"
       >
         <Plus className="size-4" />
