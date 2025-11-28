@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Sparkles, LayoutGrid, Zap } from "lucide-react";
+import { Sparkles, LayoutGrid, Zap, SquareStack } from "lucide-react";
 import { Logo } from "@/components/logo";
 
 interface EmptyStateProps {
@@ -27,7 +27,7 @@ export function EmptyState({ onAdd }: EmptyStateProps) {
       </div>
       <div className="flex flex-col items-center gap-4 sm:flex-row">
         <Button size="lg" onClick={onAdd} className="gap-2">
-          <Zap className="size-4" />
+          <SquareStack className="size-4" />
           Add your first widget
         </Button>
       </div>

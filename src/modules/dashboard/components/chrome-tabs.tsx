@@ -197,19 +197,17 @@ export function ChromeTabs({ context = "productivity" }: ChromeTabsProps) {
             <Edit2 className="size-4" />
             Rename
           </button>
-          {tabs.length > 1 && (
-            <button
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                void handleRemoveTab(contextMenu.tabId);
-              }}
-            >
-              <Trash2 className="size-4" />
-              Delete Tab
-            </button>
-          )}
+          <button
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              void handleRemoveTab(contextMenu.tabId);
+            }}
+          >
+            <Trash2 className="size-4" />
+            Delete Tab
+          </button>
         </div>,
         document.body
       )}

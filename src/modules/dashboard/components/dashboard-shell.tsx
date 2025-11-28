@@ -40,12 +40,14 @@ export function DashboardShell() {
       {/* Background container that extends to bottom of screen */}
       <div className="absolute inset-0 bg-background -z-10" />
       
-      <div className="flex-shrink-0 p-2 sm:p-4 relative z-0">
-        <DashboardToolbar
-          onAdd={() => setPickerOpen(true)}
-        />
-      </div>
-      <div className="flex-1 overflow-hidden px-2 sm:px-4 pb-2 sm:pb-4 relative z-0">
+      {!loading && hasWidgets && (
+        <div className="flex-shrink-0 p-2 sm:p-4 relative z-0">
+          <DashboardToolbar
+            onAdd={() => setPickerOpen(true)}
+          />
+        </div>
+      )}
+      <div className={`flex-1 overflow-hidden px-2 sm:px-4 pb-2 sm:pb-4 relative z-0 ${!loading && !hasWidgets ? 'flex items-center justify-center' : ''}`}>
         {loading ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 6 }).map((_, i) => (

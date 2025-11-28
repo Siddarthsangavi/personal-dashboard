@@ -175,23 +175,28 @@ export function PageLibrary() {
   };
 
   const handleCreateChildPage = async (parentId: number) => {
-    const title = prompt("Enter page title:");
-    if (!title || !title.trim()) {
-      return;
-    }
-
     try {
+      const tabsStore = useDataLibraryTabsStore.getState();
+      const tabId = tabsStore.currentTabId;
+      if (!tabId) {
+        showToast("Please select a tab first", "error");
+        return;
+      }
+
       const page = await pageRepository.create({
-        title: title.trim(),
+        title: "Untitled",
         content: "",
         parentId: parentId,
+        tabId: tabId,
       });
       if (page) {
         // Expand the parent
         setExpandedPages((prev) => new Set([...prev, parentId]));
         // Reload pages with children
-        await loadPagesWithChildren();
+        await loadPagesWithChildren(false);
+        // Set selected page ID and load it immediately
         setSelectedPageId(page.id);
+        await loadPage(page.id);
         showToast("Page created", "success");
       } else {
         showToast("Failed to create page", "error");
@@ -299,12 +304,54 @@ export function PageLibrary() {
     if (!pageToDelete) return;
 
     try {
+      // Get the page before deleting to check for parent
+      const pageToDeleteRecord = await pageRepository.get(pageToDelete);
+      const parentId = pageToDeleteRecord?.parentId ?? null;
+      
+      const wasSelected = selectedPageId === pageToDelete;
       await pageRepository.remove(pageToDelete);
-      await loadPagesWithChildren();
-      if (selectedPageId === pageToDelete) {
-        const remaining = pages.filter((p) => p.id !== pageToDelete);
-        setSelectedPageId(remaining.length > 0 ? remaining[0].id : null);
+      
+      // Check if parent exists and is now empty (no children left)
+      if (parentId !== null) {
+        const tabsStore = useDataLibraryTabsStore.getState();
+        const tabId = tabsStore.currentTabId;
+        if (tabId !== null) {
+          const parentChildren = await pageRepository.list(parentId, tabId);
+          if (parentChildren.length === 0) {
+            // Parent is now empty, delete it too
+            await pageRepository.remove(parentId);
+            // If the parent was selected, clear selection
+            if (selectedPageId === parentId) {
+              setSelectedPage(null);
+              setPageContent("");
+            }
+          }
+        }
       }
+      
+      await loadPagesWithChildren(false); // Don't preserve selection since we're deleting
+      
+      if (wasSelected) {
+        // Clear the selected page state first
+        setSelectedPage(null);
+        setPageContent("");
+        
+        // Get the updated pages list and select the first one if available
+        const tabsStore = useDataLibraryTabsStore.getState();
+        const tabId = tabsStore.currentTabId;
+        if (tabId !== null) {
+          const remaining = await pageRepository.list(null, tabId);
+          if (remaining.length > 0) {
+            setSelectedPageId(remaining[0].id);
+            // loadPage will be called by the useEffect when selectedPageId changes
+          } else {
+            setSelectedPageId(null);
+          }
+        } else {
+          setSelectedPageId(null);
+        }
+      }
+      
       setDeleteConfirmOpen(false);
       setPageToDelete(null);
       showToast("Page deleted", "success");
@@ -494,6 +541,12 @@ export function PageLibrary() {
                 </button>
                 <button
                   onClick={() => togglePageExpanded(page.id)}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    setPageToRename({ id: page.id, currentTitle: page.title });
+                    setNewRenameTitle(page.title);
+                    setRenameDialogOpen(true);
+                  }}
                   onContextMenu={(e) => handleContextMenu(e, page.id)}
                   className={cn(
                     "flex-1 flex items-center px-3 py-2 rounded-lg text-left transition-colors min-w-0",
@@ -700,7 +753,7 @@ export function PageLibrary() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent>
+        <DialogContent onEnter={confirmDeletePage}>
           <DialogHeader>
             <DialogTitle>Delete Page</DialogTitle>
             <DialogDescription>
@@ -720,6 +773,7 @@ export function PageLibrary() {
             <Button
               variant="destructive"
               onClick={confirmDeletePage}
+              className="bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800"
             >
               Delete
             </Button>

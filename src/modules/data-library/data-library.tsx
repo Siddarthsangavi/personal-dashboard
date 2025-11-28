@@ -595,7 +595,7 @@ export function DataLibrary() {
           if (!open) resetItemEditor();
         }}
       >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" onEnter={handleSaveItem}>
           <DialogHeader>
             <DialogTitle>{editingItem ? "Edit Item" : "New Item"}</DialogTitle>
             <DialogDescription>
@@ -703,7 +703,7 @@ export function DataLibrary() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <DialogContent>
+        <DialogContent onEnter={handleDelete}>
           <DialogHeader>
             <DialogTitle>Delete item?</DialogTitle>
             <DialogDescription>
@@ -714,7 +714,11 @@ export function DataLibrary() {
             <Button variant="ghost" onClick={() => setConfirmDeleteOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+              className="bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800"
+            >
               Delete
             </Button>
           </DialogFooter>
@@ -723,7 +727,7 @@ export function DataLibrary() {
 
       {/* Delete Category Confirmation Dialog */}
       <Dialog open={confirmDeleteCategoryOpen} onOpenChange={setConfirmDeleteCategoryOpen}>
-        <DialogContent>
+        <DialogContent onEnter={confirmDeleteCategory}>
           <DialogHeader>
             <DialogTitle>Delete Category</DialogTitle>
             <DialogDescription>
@@ -743,6 +747,7 @@ export function DataLibrary() {
             <Button
               variant="destructive"
               onClick={confirmDeleteCategory}
+              className="bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800"
             >
               Delete
             </Button>

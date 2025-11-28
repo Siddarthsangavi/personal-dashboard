@@ -328,7 +328,7 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent onEnter={() => void handleSave()}>
           <DialogHeader>
             <DialogTitle>
               {editingLink ? "Edit quick link" : "New quick link"}
@@ -399,7 +399,7 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
       </Dialog>
 
       <Dialog open={isConfirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent>
+        <DialogContent onEnter={() => void handleDelete()}>
           <DialogHeader>
             <DialogTitle>Remove quick link?</DialogTitle>
             <DialogDescription>
@@ -410,7 +410,11 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
             <Button variant="ghost" onClick={() => setConfirmOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={() => void handleDelete()}>
+            <Button 
+              variant="destructive" 
+              onClick={() => void handleDelete()}
+              className="bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800"
+            >
               Delete
             </Button>
           </DialogFooter>

@@ -109,15 +109,13 @@ export function PageNavigation() {
               <span className="truncate">{currentTab?.name || "Tab"}</span>
               <Edit2 className="size-3 opacity-0 group-hover:opacity-100" />
             </button>
-            {tabs.length > 1 && (
-              <button
-                onClick={(e) => handleRemoveTab(currentTab!.id, e)}
-                className="p-1 rounded hover:bg-destructive/20 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Remove tab"
-              >
-                <X className="size-3" />
-              </button>
-            )}
+            <button
+              onClick={(e) => handleRemoveTab(currentTab!.id, e)}
+              className="p-1 rounded hover:bg-destructive/20 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+              title="Remove tab"
+            >
+              <X className="size-3" />
+            </button>
           </div>
         )}
       </div>

@@ -159,6 +159,7 @@ export function NotesWidget({ widget, setHeaderActions }: NotesWidgetProps) {
                 <IconButton
                   icon={<Trash2 className="size-4" />}
                   label="Delete note"
+                  variant="destructive"
                   onClick={() => confirmDelete(note)}
                 />
               </div>
@@ -178,7 +179,7 @@ export function NotesWidget({ widget, setHeaderActions }: NotesWidgetProps) {
           if (!open) resetComposer();
         }}
       >
-        <DialogContent>
+        <DialogContent onEnter={() => void handleSaveNote()}>
           <DialogHeader>
             <DialogTitle>
               {editingNote ? "Edit note" : "New note"}
@@ -212,7 +213,7 @@ export function NotesWidget({ widget, setHeaderActions }: NotesWidgetProps) {
       </Dialog>
 
       <Dialog open={isConfirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent>
+        <DialogContent onEnter={() => void handleDelete()}>
           <DialogHeader>
             <DialogTitle>Delete note?</DialogTitle>
             <DialogDescription>
@@ -227,6 +228,7 @@ export function NotesWidget({ widget, setHeaderActions }: NotesWidgetProps) {
             <Button
               variant="destructive"
               onClick={() => void handleDelete()}
+              className="bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800"
             >
               Delete
             </Button>
