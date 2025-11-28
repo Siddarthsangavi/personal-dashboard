@@ -2,7 +2,8 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   quickLinkRepository,
   type QuickLinkRecord,
@@ -15,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import {
   Plus,
   Search,
+  Trash2,
 } from "lucide-react";
 import {
   Dialog,
@@ -56,6 +58,8 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
     null
   );
   const [isConfirmOpen, setConfirmOpen] = useState(false);
+  const [linkContextMenu, setLinkContextMenu] = useState<{ x: number; y: number; link: QuickLinkRecord } | null>(null);
+  const linkContextMenuRef = useRef<HTMLDivElement>(null);
 
   const refresh = useCallback(async () => {
     const collection = await quickLinkRepository.list(widget.id);
@@ -105,7 +109,41 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
   const confirmDelete = (link: QuickLinkRecord) => {
     setPendingDelete(link);
     setConfirmOpen(true);
+    setLinkContextMenu(null); // Close context menu when opening delete dialog
   };
+
+  const handleLinkContextMenu = (e: React.MouseEvent, link: QuickLinkRecord) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent widget context menu from showing
+    setLinkContextMenu({ x: e.clientX, y: e.clientY, link });
+  };
+
+  useEffect(() => {
+    if (!linkContextMenu) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (linkContextMenuRef.current && !linkContextMenuRef.current.contains(event.target as Node)) {
+        setLinkContextMenu(null);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setLinkContextMenu(null);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [linkContextMenu]);
 
   const handleDelete = async () => {
     if (!pendingDelete) return;
@@ -277,6 +315,7 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
               <button
                 className={styles.linkButton}
                 onClick={() => window.open(link.url, "_blank")}
+                onContextMenu={(e) => handleLinkContextMenu(e, link)}
                 onPointerDown={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
                 aria-label={`Open ${link.label}`}
@@ -400,6 +439,33 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Link Context Menu */}
+      {linkContextMenu && typeof window !== "undefined" && document.body && createPortal(
+        <div
+          ref={linkContextMenuRef}
+          className="fixed z-[9999] w-48 rounded-xl border border-border/70 bg-card p-2 shadow-2xl"
+          style={{
+            left: `${linkContextMenu.x}px`,
+            top: `${linkContextMenu.y}px`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <button
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              confirmDelete(linkContextMenu.link);
+            }}
+          >
+            <Trash2 className="size-4" />
+            Delete Link
+          </button>
+        </div>,
+        document.body
+      )}
     </>
   );
 }
