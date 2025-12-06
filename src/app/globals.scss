@@ -176,22 +176,22 @@
 
 .neumorphism {
   --neumorphism-background: #e0e0e0;
-  --neumorphism-shadow-light: #ffffff;
-  --neumorphism-shadow-dark: #bebebe;
+  --neumorphism-shadow-light: rgba(255, 255, 255, 0.7);
+  --neumorphism-shadow-dark: rgba(0, 0, 0, 0.1);
   --neumorphism-text: #5e5e5e;
 }
 
 .dark .neumorphism {
   --neumorphism-background: #2c2c2c;
-  --neumorphism-shadow-light: #3a3a3a;
-  --neumorphism-shadow-dark: #1e1e1e;
+  --neumorphism-shadow-light: rgba(255, 255, 255, 0.05);
+  --neumorphism-shadow-dark: rgba(0, 0, 0, 0.5);
   --neumorphism-text: #b0b0b0;
 }
 
 .neumorphic-card {
   background: var(--neumorphism-background);
-  box-shadow: 10px 10px 20px var(--neumorphism-shadow-dark),
-    -10px -10px 20px var(--neumorphism-shadow-light);
+  box-shadow: 4px 4px 8px var(--neumorphism-shadow-dark),
+    -4px -4px 8px var(--neumorphism-shadow-light);
   color: var(--neumorphism-text);
   border-radius: var(--radius-lg);
 }

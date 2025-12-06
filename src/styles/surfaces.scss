@@ -52,47 +52,38 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-// Neumorphic Surface - Strong uniform raised effect on all sides
+// Neumorphic Surface - Subtle shadows for depth
 .surface--neumorphic {
   background: var(--sidebar);
-  border: 2px solid color-mix(in srgb, var(--border) 100%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: 
-    0 0 0 3px rgba(0, 0, 0, 0.2),
-    0 20px 40px 8px rgba(0, 0, 0, 0.25),
-    0 -20px 40px 8px rgba(0, 0, 0, 0.25),
-    20px 0 40px 8px rgba(0, 0, 0, 0.25),
-    -20px 0 40px 8px rgba(0, 0, 0, 0.25);
+    3px 3px 6px rgba(0, 0, 0, 0.1),
+    -3px -3px 6px rgba(255, 255, 255, 0.7);
 }
 
 .surface--neumorphic.widget-card {
   background: var(--sidebar);
-  border: 2px solid color-mix(in srgb, var(--border) 100%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: 
-    0 0 0 3px rgba(0, 0, 0, 0.2),
-    0 20px 40px 8px rgba(0, 0, 0, 0.25),
-    0 -20px 40px 8px rgba(0, 0, 0, 0.25),
-    20px 0 40px 8px rgba(0, 0, 0, 0.25),
-    -20px 0 40px 8px rgba(0, 0, 0, 0.25);
+    3px 3px 6px rgba(0, 0, 0, 0.1),
+    -3px -3px 6px rgba(255, 255, 255, 0.7);
 }
 
-.dark .surface--neumorphic {
-  box-shadow: 
-    0 0 0 3px rgba(255, 255, 255, 0.2),
-    0 20px 40px 8px rgba(255, 255, 255, 0.2),
-    0 -20px 40px 8px rgba(255, 255, 255, 0.2),
-    20px 0 40px 8px rgba(255, 255, 255, 0.2),
-    -20px 0 40px 8px rgba(255, 255, 255, 0.2);
-}
-
+.dark .surface--neumorphic,
 .dark .surface--neumorphic.widget-card {
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
   box-shadow: 
-    0 0 0 3px rgba(255, 255, 255, 0.2),
-    0 20px 40px 8px rgba(255, 255, 255, 0.2),
-    0 -20px 40px 8px rgba(255, 255, 255, 0.2),
-    20px 0 40px 8px rgba(255, 255, 255, 0.2),
-    -20px 0 40px 8px rgba(255, 255, 255, 0.2);
+    3px 3px 6px rgba(0, 0, 0, 0.5),
+    -3px -3px 6px rgba(255, 255, 255, 0.05);
+}
+
+// Ensure child elements don't have their own shadows interfering
+.surface--neumorphic *,
+.surface--neumorphic.widget-card * {
+  text-shadow: none !important;
+  filter: none !important;
 }
