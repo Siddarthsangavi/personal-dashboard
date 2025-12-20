@@ -172,7 +172,6 @@ export function WidgetBoard() {
         // For date widget, prevent any size changes
         if (widget.type === "date") {
           if (item.w !== widget.size.w || item.h !== widget.size.h) {
-            // Revert to original size
             updateLayout(
               widgetId,
               {
