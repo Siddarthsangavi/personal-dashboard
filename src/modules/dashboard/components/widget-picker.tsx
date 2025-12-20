@@ -8,10 +8,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { widgetCatalog, WidgetType } from "../types";
+import { widgetCatalog, WidgetType } from "@/modules/dashboard/types";
 import * as Icons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useDashboardStore } from "../store/dashboard-store";
+import { useDashboardStore } from "@/modules/dashboard/store/dashboard-store";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
 import { Search } from "lucide-react";

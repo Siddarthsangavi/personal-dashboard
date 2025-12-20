@@ -6,7 +6,7 @@ import { WidgetRecord } from "@/modules/dashboard/types";
 import styles from "./bookmark-widget.module.scss";
 import { Icon } from "@iconify/react";
 import { Plus } from "lucide-react";
-import { LinkEditorDialog } from "../quick-links/link-editor";
+import { LinkEditorDialog } from "@/modules/widgets/quick-links/link-editor";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

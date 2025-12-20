@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronRight, Plus, X, Edit2 } from "lucide-react";
-import { useDashboardStore } from "../store/dashboard-store";
+import { useDashboardStore } from "@/modules/dashboard/store/dashboard-store";
 
 export function PageNavigation() {
   const currentTabId = useDashboardStore((state) => state.currentTabId);

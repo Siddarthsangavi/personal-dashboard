@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { useDashboardStore } from "../store/dashboard-store";
+import { useDashboardStore } from "@/modules/dashboard/store/dashboard-store";
 import { LayoutGrid } from "lucide-react";
-import { widgetCatalog } from "../types";
+import { widgetCatalog } from "@/modules/dashboard/types";
 import * as Icons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 

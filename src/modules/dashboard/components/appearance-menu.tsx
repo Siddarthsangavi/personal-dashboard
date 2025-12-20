@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/core/icon-button";
 import { useTheme } from "next-themes";
 import { Settings2, SunMedium, Moon, Layers, PanelsTopLeft, Sparkles } from "lucide-react";
-import { useDashboardStore } from "../store/dashboard-store";
-import { SurfaceStyle } from "../types";
+import { useDashboardStore } from "@/modules/dashboard/store/dashboard-store";
+import { SurfaceStyle } from "@/modules/dashboard/types";
 import { cn } from "@/lib/utils";
 
 const surfaceOptions: Array<{

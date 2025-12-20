@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useDashboardStore } from "../store/dashboard-store";
+import { useDashboardStore } from "@/modules/dashboard/store/dashboard-store";
 import { useToast } from "@/components/ui/toast";
 
 export function useKeyboardShortcuts(onShowShortcuts?: () => void) {

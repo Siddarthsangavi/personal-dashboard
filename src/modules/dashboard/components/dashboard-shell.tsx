@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useDashboardStore } from "../store/dashboard-store";
+import { useDashboardStore } from "@/modules/dashboard/store/dashboard-store";
 import { DashboardToolbar } from "./dashboard-toolbar";
 import { WidgetBoard } from "./widget-board";
 import { EmptyState } from "./empty-state";

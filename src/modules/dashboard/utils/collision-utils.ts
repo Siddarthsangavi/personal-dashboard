@@ -3,7 +3,7 @@
  * Extracted from widget-board and dashboard-store for reusability
  */
 
-import { GridPosition, GridSize } from "../types";
+import { GridPosition, GridSize } from "@/modules/dashboard/types";
 
 export type Rect = { position: GridPosition; size: GridSize };
 

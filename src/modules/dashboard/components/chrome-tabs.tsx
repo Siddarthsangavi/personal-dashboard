@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { TabsList } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Plus, Edit2, Trash2 } from "lucide-react";
-import { useDashboardStore } from "../store/dashboard-store";
+import { useDashboardStore } from "@/modules/dashboard/store/dashboard-store";
 import { useDataLibraryTabsStore } from "@/modules/data-library/store/data-library-tabs-store";
 import { cn } from "@/lib/utils";
 import { type TabRecord } from "@/lib/db";
