@@ -27,6 +27,7 @@ interface WidgetFrameProps extends PropsWithChildren {
   style?: CSSProperties;
   className?: string;
   hideTitleBar?: boolean;
+  disableResize?: boolean;
 }
 
 export function WidgetFrame({
@@ -40,6 +41,7 @@ export function WidgetFrame({
   style,
   className,
   hideTitleBar = false,
+  disableResize = false,
 }: WidgetFrameProps) {
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -61,6 +63,7 @@ export function WidgetFrame({
                 surface === "neumorphic" && "surface--neumorphic",
                 surface === "default" && "surface--default",
                 widget.type === "quick-links" && "widget-card--quick-links",
+                widget.type === "bookmark" && "widget-card--bookmark",
                 widget.type === "date" && "widget-card--date",
                 className
               )}
@@ -153,7 +156,7 @@ export function WidgetFrame({
         >
           {children}
         </div>
-                {widget.type !== "date" && (
+                {!disableResize && widget.type !== "date" && (
                 <div
                   className="widget-card__resizer"
                   role="button"

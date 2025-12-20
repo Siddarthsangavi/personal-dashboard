@@ -12,6 +12,7 @@ import { WeatherWidget } from "./weather/weather-widget";
 import { CalendarWidget } from "./calendar/calendar-widget";
 import { PomodoroWidget } from "./pomodoro/pomodoro-widget";
 import { ScratchpadWidget } from "./scratchpad/scratchpad-widget";
+import { BookmarkWidget } from "./bookmark/bookmark-widget";
 
 interface WidgetRendererProps {
   widget: WidgetRecord;
@@ -44,6 +45,8 @@ export function WidgetRenderer({
       );
     case "quick-links":
       return <QuickLinksWidget widget={widget} onRemove={onRemove} />;
+    case "bookmark":
+      return <BookmarkWidget widget={widget} onRemove={onRemove} />;
     case "analog-clock":
       return <AnalogClockWidget widget={widget} setHeaderAction={setHeaderAction || (() => {})} />;
     case "date":
@@ -58,6 +61,7 @@ export function WidgetRenderer({
       return <PomodoroWidget widget={widget} setHeaderAction={setHeaderAction || (() => {})} />;
     case "scratchpad":
       return <ScratchpadWidget widget={widget} />;
+    /* removed old 'bookmarks' widget (plural) */
     default:
       return (
         <div className="text-sm text-muted-foreground">

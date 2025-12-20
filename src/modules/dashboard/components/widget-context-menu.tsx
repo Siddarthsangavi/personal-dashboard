@@ -63,22 +63,45 @@ export function WidgetContextMenu({
       onClick={(e) => e.stopPropagation()}
       onContextMenu={(e) => e.preventDefault()}
     >
-      <button
-        className={cn(
-          "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400",
-          "bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30",
-          "transition-colors"
-        )}
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          onDelete(widgetId);
-          onClose();
-        }}
-      >
-        <Trash2 className="size-4" />
-        Delete widget
-      </button>
+      <div className="flex flex-col gap-2">
+        <button
+          className={cn(
+            "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm",
+            "bg-accent hover:bg-accent-2 transition-colors"
+          )}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            // Dispatch a global edit event that widgets can listen for
+            try {
+              window.dispatchEvent(new CustomEvent('widget-edit', { detail: { widgetId } }));
+            } catch {
+              // noop in non-browser
+            }
+            onClose();
+          }}
+        >
+          <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+          Edit
+        </button>
+
+        <button
+          className={cn(
+            "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400",
+            "bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30",
+            "transition-colors"
+          )}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onDelete(widgetId);
+            onClose();
+          }}
+        >
+          <Trash2 className="size-4" />
+          Delete widget
+        </button>
+      </div>
     </div>
   );
 

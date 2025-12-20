@@ -481,17 +481,21 @@ div[data-widget-type]:focus-visible {
   transition: none;
   z-index: 3;
   will-change: transform;
+  /* Prevent library default red drag/placeholder background from showing */
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .react-grid-item.react-grid-placeholder {
-  background: color-mix(in srgb, var(--border) 15%, transparent);
-  border: 2px dashed color-mix(in srgb, var(--muted-foreground) 40%, transparent);
-  opacity: 1;
+  /* Override react-grid-layout's default red placeholder so it matches app theme */
+  background: color-mix(in srgb, var(--border) 15%, transparent) !important;
+  border: 2px dashed color-mix(in srgb, var(--muted-foreground) 40%, transparent) !important;
+  opacity: 1 !important;
   transition-duration: 100ms;
   z-index: 2;
   border-radius: var(--radius-lg);
   user-select: none;
-  box-shadow: none;
+  box-shadow: none !important;
 }
 
 .dark .react-grid-item.react-grid-placeholder {

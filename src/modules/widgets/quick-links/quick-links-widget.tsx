@@ -18,6 +18,7 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
+import { LinkEditorDialog } from "./link-editor";
 import {
   Dialog,
   DialogContent,
@@ -48,12 +49,6 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
   const [links, setLinks] = useState<QuickLinkRecord[]>([]);
   const [isModalOpen, setModalOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<QuickLinkRecord | null>(null);
-  const [label, setLabel] = useState("");
-  const [url, setUrl] = useState("");
-  const [iconName, setIconName] = useState(curatedIcons[0]);
-  const [showIconPicker, setShowIconPicker] = useState(false);
-  const [iconQuery, setIconQuery] = useState("");
-  const [iconResults, setIconResults] = useState<string[]>(curatedIcons);
   const [pendingDelete, setPendingDelete] = useState<QuickLinkRecord | null>(
     null
   );
@@ -76,33 +71,26 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
 
   const openModal = (link?: QuickLinkRecord) => {
     setEditingLink(link ?? null);
-    setLabel(link?.label ?? "");
-    setUrl(link?.url ?? "");
-    setIconName(link?.icon ?? curatedIcons[0]);
-    setShowIconPicker(false);
     setModalOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!url.trim()) return;
+  const handleSave = async (values: { label: string; url: string; icon: string }) => {
+    if (!values.url.trim()) return;
     if (editingLink) {
       await quickLinkRepository.update(editingLink.id, {
-        label: label.trim() || editingLink.label,
-        url: url.trim(),
-        icon: iconName,
+        label: values.label || editingLink.label,
+        url: values.url,
+        icon: values.icon,
       });
     } else {
       await quickLinkRepository.create({
         widgetId: widget.id,
-        label: label.trim() || "Link",
-        url: url.trim(),
-        icon: iconName,
+        label: values.label || "Link",
+        url: values.url,
+        icon: values.icon,
       });
     }
     setModalOpen(false);
-    setLabel("");
-    setUrl("");
-    setIconName(curatedIcons[0]);
     void refresh();
   };
 
@@ -153,30 +141,7 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
     void refresh();
   };
 
-  useEffect(() => {
-    if (!iconQuery.trim()) {
-      setIconResults(curatedIcons);
-      return;
-    }
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      try {
-        const response = await fetch(
-          `/api/icons?q=${encodeURIComponent(iconQuery.trim())}`,
-          { signal: controller.signal }
-        );
-        if (!response.ok) return;
-        const data = await response.json();
-        setIconResults((data.icons as string[]) ?? curatedIcons);
-      } catch {
-        // noop
-      }
-    }, 280);
-    return () => {
-      controller.abort();
-      clearTimeout(timer);
-    };
-  }, [iconQuery]);
+  // icon search and picker are handled by LinkEditorDialog now
 
   // Calculate max icons based on widget area (width * height)
   // e.g., 5x1 = 5 icons, 2x2 = 4 icons, 3x2 = 6 icons
@@ -218,83 +183,13 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
           </div>
         </div>
 
-        <Dialog
+        <LinkEditorDialog
           open={isModalOpen}
-          onOpenChange={(open) => {
-            setModalOpen(open);
-            if (!open) {
-              setShowIconPicker(false);
-              setIconQuery("");
-            }
-          }}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>New quick link</DialogTitle>
-              <DialogDescription>
-                Select an icon and paste the destination URL.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl border border-border p-3">
-                  <Icon icon={iconName} width={32} height={32} />
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowIconPicker((prev) => !prev)}
-                >
-                  {showIconPicker ? "Hide icons" : "Change icon"}
-                </Button>
-              </div>
-              {showIconPicker && (
-                <div className="space-y-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <Input
-                      value={iconQuery}
-                      onChange={(event) => setIconQuery(event.target.value)}
-                      placeholder="Search icons"
-                      className="pl-9"
-                    />
-                  </div>
-                  <div className={styles.iconPicker}>
-                    {iconResults.map((icon) => (
-                      <button
-                        key={icon}
-                        className={cn(
-                          styles.iconChoice,
-                          icon === iconName && styles.isActive
-                        )}
-                        onClick={() => setIconName(icon)}
-                      >
-                        <Icon icon={icon} width={22} height={22} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <Input
-                value={label}
-                onChange={(event) => setLabel(event.target.value)}
-                placeholder="Label"
-              />
-              <Input
-                value={url}
-                onChange={(event) => setUrl(event.target.value)}
-                placeholder="https://example.com"
-                type="url"
-              />
-            </div>
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="ghost" onClick={() => setModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => void handleSave()}>Save</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          onOpenChange={setModalOpen}
+          initial={editingLink ? { label: editingLink.label, url: editingLink.url, icon: editingLink.icon } : undefined}
+          onSave={async (values) => await handleSave(values)}
+          title={editingLink ? "Edit quick link" : "New quick link"}
+        />
       </>
     );
   }
@@ -337,85 +232,13 @@ export function QuickLinksWidget({ widget, onRemove }: QuickLinksWidgetProps) {
         </div>
       </div>
 
-      <Dialog
+      <LinkEditorDialog
         open={isModalOpen}
-        onOpenChange={(open) => {
-          setModalOpen(open);
-          if (!open) {
-            setShowIconPicker(false);
-            setIconQuery("");
-          }
-        }}
-      >
-        <DialogContent onEnter={() => void handleSave()}>
-          <DialogHeader>
-            <DialogTitle>
-              {editingLink ? "Edit quick link" : "New quick link"}
-            </DialogTitle>
-            <DialogDescription>
-              Select an icon and paste the destination URL.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl border border-border p-3">
-                <Icon icon={iconName} width={32} height={32} />
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowIconPicker((prev) => !prev)}
-              >
-                {showIconPicker ? "Hide icons" : "Change icon"}
-              </Button>
-            </div>
-            {showIconPicker && (
-              <div className="space-y-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                  <Input
-                    value={iconQuery}
-                    onChange={(event) => setIconQuery(event.target.value)}
-                    placeholder="Search icons"
-                    className="pl-9"
-                  />
-                </div>
-                <div className={styles.iconPicker}>
-                  {iconResults.map((icon) => (
-                    <button
-                      key={icon}
-                      className={cn(
-                        styles.iconChoice,
-                        icon === iconName && styles.isActive
-                      )}
-                      onClick={() => setIconName(icon)}
-                    >
-                      <Icon icon={icon} width={22} height={22} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            <Input
-              value={label}
-              onChange={(event) => setLabel(event.target.value)}
-              placeholder="Label"
-            />
-            <Input
-              value={url}
-              onChange={(event) => setUrl(event.target.value)}
-              placeholder="https://example.com"
-              type="url"
-            />
-          </div>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="ghost" onClick={() => setModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => void handleSave()}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onOpenChange={setModalOpen}
+        initial={editingLink ? { label: editingLink.label, url: editingLink.url, icon: editingLink.icon } : undefined}
+        onSave={async (values) => await handleSave(values)}
+        title={editingLink ? "Edit quick link" : "New quick link"}
+      />
 
       <Dialog open={isConfirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent onEnter={() => void handleDelete()}>

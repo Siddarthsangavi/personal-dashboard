@@ -3,6 +3,7 @@
 import { useMemo, useCallback, memo, useState, useEffect, useRef, type ReactNode } from "react";
 import GridLayout, { Layout } from "react-grid-layout";
 import { WidgetFrame } from "./widget-frame";
+import { quickLinkRepository, widgetRepository } from "@/lib/db";
 import { useDashboardStore } from "../store/dashboard-store";
 import { GRID_SETTINGS, SurfaceStyle } from "../types";
 import { useElementSize } from "../hooks/use-element-size";
@@ -24,6 +25,7 @@ const WidgetHost = memo(function WidgetHost({
   onRemove,
 }: WidgetHostProps) {
   const [headerActions, setHeaderActions] = useState<ReactNode | null>(null);
+  const [isFolder, setIsFolder] = useState(false);
 
   const handleRemove = useCallback(
     (id: number) => {
@@ -34,10 +36,44 @@ const WidgetHost = memo(function WidgetHost({
 
   // Hide title bar for widgets that don't need titles
   const hideTitleBar = widget.type === "quick-links" || 
+                       (widget.type === "bookmark" && !isFolder) ||
                        widget.type === "analog-clock" || 
                        widget.type === "date" || 
                        widget.type === "digital-clock" ||
                        widget.type === "calendar";
+
+  // Determine folder status by checking quicklink count for bookmark widgets
+  useEffect(() => {
+    let mounted = true;
+    if (widget.type !== "bookmark") return;
+    void (async () => {
+      try {
+        const items = await quickLinkRepository.list(widget.id);
+        if (!mounted) return;
+        // Only treat as folder when there are multiple quicklinks.
+        // Do not infer folder purely from widget size (bookmarks can be 2x2 single links).
+        setIsFolder((items ?? []).length > 1);
+      } catch (err) {
+        // ignore
+      }
+    })();
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent;
+      if (ce?.detail?.widgetId === widget.id) {
+        void (async () => {
+          try {
+            const items = await quickLinkRepository.list(widget.id);
+            if (!mounted) return;
+            setIsFolder((items ?? []).length > 1);
+          } catch {
+            // ignore
+          }
+        })();
+      }
+    };
+    window.addEventListener('quicklinks-updated', handler as EventListener);
+    return () => { mounted = false; window.removeEventListener('quicklinks-updated', handler as EventListener); };
+  }, [widget.id, widget.type]);
 
   return (
     <WidgetFrame
@@ -47,6 +83,7 @@ const WidgetHost = memo(function WidgetHost({
       onRemove={handleRemove}
       onDragPointerDown={() => {}} // Handled by react-grid-layout
       onResizePointerDown={() => {}} // Handled by react-grid-layout
+      disableResize={widget.type === "bookmark" && isFolder}
       hideTitleBar={hideTitleBar}
     >
       <WidgetRenderer
@@ -278,6 +315,70 @@ export function WidgetBoard() {
     });
   }, [currentTabId, updateLayout]);
 
+  // Handle drag stop to support merging bookmark widgets into a folder
+  const handleDragStop = useCallback(async (layout: Layout[], oldItem: any, newItem: any, placeholder: any, e?: MouseEvent) => {
+    try {
+      const movedId = parseInt(newItem.i, 10);
+      const movedWidget = widgets.find((w) => w.id === movedId);
+      if (!movedWidget) return handleLayoutChangeEnd();
+      // If we have an event, try to detect the widget under the drop point.
+      let targetWidget: WidgetRecord | undefined;
+      if (e && typeof e.clientX === "number" && typeof e.clientY === "number") {
+        // Prefer elementsFromPoint so we can skip the moved element if it's on top
+        const els = (document as any).elementsFromPoint
+          ? (document as any).elementsFromPoint(e.clientX, e.clientY) as HTMLElement[]
+          : [document.elementFromPoint(e.clientX, e.clientY) as HTMLElement].filter(Boolean) as HTMLElement[];
+        for (const el of els) {
+          if (!el) continue;
+          const host = el.closest('[data-widget-id]') as HTMLElement | null;
+          if (!host) continue;
+          const idAttr = host.getAttribute('data-widget-id');
+          const typeAttr = host.getAttribute('data-widget-type');
+          if (!idAttr) continue;
+          const targetId = parseInt(idAttr, 10);
+          if (isNaN(targetId)) continue;
+          if (targetId === movedId) continue; // skip the moved widget itself
+          if (typeAttr !== 'bookmark') continue;
+          targetWidget = widgets.find((w) => w.id === targetId);
+          if (targetWidget) break;
+        }
+      }
+
+      if (targetWidget) {
+        // Move all quick links from movedWidget to targetWidget
+        const movedLinks = await quickLinkRepository.list(movedWidget.id);
+        if ((movedLinks ?? []).length > 0) {
+          await Promise.all(movedLinks.map((link) => quickLinkRepository.update(link.id, { widgetId: targetWidget!.id })));
+
+          // Ensure the parent folder widget is 2x2
+          await updateLayout(targetWidget.id, { position: targetWidget.position, size: { w: 2, h: 2 } }, { persist: true });
+
+          // Remove the moved (now-empty) widget
+          await removeWidgetStore(movedWidget.id);
+
+          // Notify any listeners that quicklinks have changed for the target widget
+          try {
+            window.dispatchEvent(new CustomEvent('quicklinks-updated', { detail: { widgetId: targetWidget.id } }));
+          } catch (err) {
+            // noop in non-browser
+          }
+
+          showToast("Created folder", "success");
+          return;
+        } else {
+          // Nothing to move - avoid deleting the source widget accidentally
+          showToast("No links to move", "neutral");
+          return;
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
+
+    // Fallback: persist positions after normal drag stop
+    handleLayoutChangeEnd();
+  }, [widgets, removeWidgetStore, updateLayout, showToast, handleLayoutChangeEnd]);
+
   // Calculate rowHeight to match column width for square widgets
   // Use fixed column width (based on 1200px) to prevent shrinking, but allow grid to expand
   const rowHeight = useMemo(() => {
@@ -328,15 +429,15 @@ export function WidgetBoard() {
             preventCollision={true}
             compactType={null} // Don't auto-compact, respect positions
             onLayoutChange={handleLayoutChange}
-            onDragStop={handleLayoutChangeEnd}
+            onDragStop={handleDragStop}
             onResizeStop={handleLayoutChangeEnd}
             isBounded={false} // Allow unlimited rows
-            draggableHandle=".widget-card__title, .widget-card__drag-area, .widget-card--quick-links"
+            draggableHandle=".widget-card__title, .widget-card__drag-area, .widget-card--quick-links, .widget-card--bookmark"
             resizeHandles={["se"]} // Only bottom-right resize handle
             useCSSTransforms={true}
           >
             {widgets.map((widget) => (
-              <div key={widget.id.toString()} data-widget-type={widget.type}>
+              <div key={widget.id.toString()} data-widget-type={widget.type} data-widget-id={widget.id}>
                 <WidgetHost
                   widget={widget}
                   surface={surface}

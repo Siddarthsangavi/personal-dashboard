@@ -1,4 +1,4 @@
-export type WidgetType = "todo" | "notes" | "quick-links" | "analog-clock" | "date" | "digital-clock" | "weather" | "calendar" | "pomodoro" | "scratchpad";
+export type WidgetType = "todo" | "notes" | "quick-links" | "bookmark" | "analog-clock" | "date" | "digital-clock" | "weather" | "calendar" | "pomodoro" | "scratchpad";
 
 export type SurfaceStyle = "default" | "glass" | "neumorphic";
 
@@ -68,6 +68,14 @@ export const widgetCatalog: Record<WidgetType, WidgetDefinition> = {
     defaultSize: { w: 1, h: 1 },
     minSize: { w: 1, h: 1 },
   },
+  "bookmark": {
+    type: "bookmark",
+    title: "Bookmark",
+    description: "Single link launcher (opens on click).",
+    icon: "Bookmark",
+    defaultSize: { w: 2, h: 2 },
+    minSize: { w: 1, h: 1 },
+  },
   "analog-clock": {
     type: "analog-clock",
     title: "Analog Clock",
@@ -124,5 +132,6 @@ export const widgetCatalog: Record<WidgetType, WidgetDefinition> = {
     defaultSize: { w: 6, h: 4 },
     minSize: { w: 3, h: 2 },
   },
+  /* removed plural `bookmarks` widget catalog entry */
 };
 

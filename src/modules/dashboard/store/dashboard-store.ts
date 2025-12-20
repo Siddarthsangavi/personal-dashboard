@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { widgetRepository, settingsRepository, tabRepository, type TabRecord } from "@/lib/db";
+import { widgetRepository, settingsRepository, tabRepository, quickLinkRepository, type TabRecord } from "@/lib/db";
 import {
   WidgetRecord,
   WidgetType,
@@ -249,7 +249,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       
       const payload = {
         type,
-        title: definition.title,
+        title: type === 'bookmark' ? '' : definition.title,
         position,
         size: definition.defaultSize,
         minSize: definition.minSize,
@@ -339,6 +339,16 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     }
   },
   removeWidget: async (id: number) => {
+    try {
+      // Remove any quicklinks associated with this widget first
+      const items = await quickLinkRepository.list(id);
+      if (items && items.length > 0) {
+        await Promise.all(items.map((it) => quickLinkRepository.remove(it.id)));
+      }
+    } catch (err) {
+      // ignore - proceed with widget removal regardless
+      console.error('Failed to remove quicklinks for widget', id, err);
+    }
     await widgetRepository.remove(id);
     set((state) => {
       const widgets = normalizeWidgets(
