@@ -3,11 +3,12 @@
 import { useMemo, useCallback, memo, useState, useEffect, useRef, type ReactNode } from "react";
 import GridLayout, { Layout } from "react-grid-layout";
 import { WidgetFrame } from "./widget-frame";
-import { quickLinkRepository, widgetRepository } from "@/lib/db";
-import { useDashboardStore } from "@/modules/dashboard/store/dashboard-store";
-import { GRID_SETTINGS, SurfaceStyle, WidgetRecord } from "@/modules/dashboard/types";
-import { useElementSize } from "@/modules/dashboard/hooks/use-element-size";
-import { useResponsiveGrid } from "@/modules/dashboard/hooks/use-responsive-grid";
+import { quickLinkRepository } from "@/lib/db";
+import { useDashboardStore } from "../store/dashboard-store";
+import { GRID_SETTINGS, SurfaceStyle } from "../types";
+import { useElementSize } from "../hooks/use-element-size";
+import { useResponsiveGrid } from "../hooks/use-responsive-grid";
+import { WidgetRecord } from "../types";
 import { WidgetRenderer } from "@/modules/widgets/widget-renderer";
 import { useToast } from "@/components/ui/toast";
 import "react-grid-layout/css/styles.css";
@@ -172,6 +173,7 @@ export function WidgetBoard() {
         // For date widget, prevent any size changes
         if (widget.type === "date") {
           if (item.w !== widget.size.w || item.h !== widget.size.h) {
+            // Revert to original size
             updateLayout(
               widgetId,
               {
@@ -292,7 +294,7 @@ export function WidgetBoard() {
         }
       });
     },
-    [widgets, updateLayout, responsiveColumns]
+    [widgets, updateLayout]
   );
 
   // Handle layout change end (persist to DB)
@@ -365,7 +367,7 @@ export function WidgetBoard() {
           return;
         } else {
           // Nothing to move - avoid deleting the source widget accidentally
-          showToast("No links to move", "info");
+          showToast("No links to move", "neutral");
           return;
         }
       }
